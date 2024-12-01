@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 use tracing::{debug, info};
 
@@ -22,9 +22,8 @@ fn parse_lists(input: &str) -> (Vec<i64>, Vec<i64>) {
     let mut right = Vec::with_capacity(LIST_LEN);
 
     for line in input.lines() {
-        let mut split_iter = line.split_ascii_whitespace();
-        left.push(split_iter.next().unwrap().parse::<i64>().unwrap());
-        right.push(split_iter.next().unwrap().parse::<i64>().unwrap());
+        left.push(line[..5].parse::<i64>().unwrap());
+        right.push(line[8..].parse::<i64>().unwrap());
     }
 
     info!("Parsing lists took: {:?}", instant.elapsed());
@@ -64,3 +63,26 @@ fn part_2(left: &Vec<i64>, right: &Vec<i64>) {
     debug!("Part 2 took: {:?}", instant_part2.elapsed());
     info!("Part 2 answer: {}", similarity);
 }
+
+// #[tracing::instrument(skip(left, right))]
+// fn part_2_lookup(left: &Vec<i64>, right: &Vec<i64>) {
+//     let instant_part2 = Instant::now();
+//     let mut similarity: i64 = 0;
+
+//     let right_max_value: usize = right.iter().max().unwrap();
+//     let array: Vec<i32> = vec![0; right_max_value];
+
+//     for i in left.iter() {
+//         for j in right.iter() {
+//             match i.cmp(j) {
+//                 std::cmp::Ordering::Equal => {
+//                     similarity += i;
+//                 }
+//                 std::cmp::Ordering::Less => break,
+//                 std::cmp::Ordering::Greater => continue,
+//             }
+//         }
+//     }
+//     debug!("Part 2 took: {:?}", instant_part2.elapsed());
+//     info!("Part 2 answer: {}", similarity);
+// }
