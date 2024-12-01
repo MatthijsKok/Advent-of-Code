@@ -1,3 +1,5 @@
+use tracing::trace;
+
 mod day01;
 
 fn main() {
@@ -9,5 +11,6 @@ fn main() {
     tracing::subscriber::set_global_default(tracing_subscriber)
         .expect("setting default subscriber failed");
 
+    trace!("Starting day 1");
     day01::solve();
 }
