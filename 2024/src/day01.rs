@@ -21,6 +21,8 @@ pub(crate) fn solve() {
         for j in right.iter() {
             if i == j {
                 similarity += i;
+            } else if i < j {
+                break;
             }
         }
     }
