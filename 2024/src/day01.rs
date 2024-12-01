@@ -19,10 +19,12 @@ pub(crate) fn solve() {
     let mut similarity: i64 = 0;
     for i in left.iter() {
         for j in right.iter() {
-            if i == j {
-                similarity += i;
-            } else if i < j {
-                break;
+            match i.cmp(j) {
+                std::cmp::Ordering::Equal => {
+                    similarity += i;
+                }
+                std::cmp::Ordering::Less => break,
+                std::cmp::Ordering::Greater => continue,
             }
         }
     }
