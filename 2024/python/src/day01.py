@@ -1,5 +1,5 @@
-from pathlib import Path
 import time
+from pathlib import Path
 
 input_file = Path(__file__).parent / "day01_input.txt"
 input = input_file.read_text()
@@ -17,8 +17,8 @@ left.sort()
 right.sort()
 
 sum = 0
-for l, r in zip(left, right, strict=True):
-    sum += abs(l - r)
+for left_item, right_item in zip(left, right, strict=True):
+    sum += abs(left_item - right_item)
 print(f"Part 1: {sum}")
 
 similarity = 0

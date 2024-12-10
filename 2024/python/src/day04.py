@@ -7,26 +7,25 @@ from typing import Literal
 MATRIX_HEIGHT = 140
 MATRIX_WIDTH = 140
 
-type Chars = Literal["X", "M", "A", "S"]
 
 input_file = Path(__file__).parent / "day04_input.txt"
 input = input_file.read_text()
-input_matrix: list[list[Chars]] = [list(line) for line in input.splitlines()]
+input_matrix: list[list[str]] = [list(line) for line in input.splitlines()]
 
 
-def get_rows(matrix: list[list[Chars]]) -> list[str]:
+def get_rows(matrix: list[list[str]]) -> list[str]:
     return ["".join(row) for row in matrix]
 
 
-def get_columns(matrix: list[list[Chars]]) -> list[str]:
+def get_columns(matrix: list[list[str]]) -> list[str]:
     return ["".join(column) for column in zip(*matrix)]
 
 
 def get_diagonals(
-    matrix: list[list[Chars]],
+    matrix: list[list[str]],
     direction: Literal["topleft", "topright"],
 ) -> list[str]:
-    diagonals: list[list[Chars]] = []
+    diagonals: list[list[str]] = []
     if direction == "topleft":
         for i in range(MATRIX_HEIGHT):
             diagonal = []
@@ -71,6 +70,7 @@ directions = [
     topright_diagonals,
     topright_diagonals_reversed,
 ]
+
 
 xmas_count = 0
 for direction in directions:

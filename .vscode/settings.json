@@ -1,0 +1,4 @@
+{
+  "mypy-type-checker.cwd": "${workspaceFolder}/2024/python",
+  "mypy-type-checker.importStrategy": "fromEnvironment"
+}

@@ -1,5 +1,4 @@
 from pathlib import Path
-import time
 from typing import Literal
 
 input_file = Path(__file__).parent / "day02_input.txt"
@@ -16,6 +15,7 @@ for line in input.splitlines():
 
 def in_bounds(prev_level: int, level: int) -> bool:
     return 1 <= abs(prev_level - level) <= 3
+
 
 def is_safe(report: list[int]) -> bool:
     report_kind: Literal["asc"] | Literal["desc"] | None = None
@@ -54,8 +54,6 @@ for report in reports:
             if is_safe(new_report):
                 total_safe_part2 += 1
                 break
-
-
 
 
 print(f"Part 1: {total_safe}")

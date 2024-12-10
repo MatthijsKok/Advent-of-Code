@@ -5,7 +5,7 @@ input_file = Path(__file__).parent / "day03_input.txt"
 input = input_file.read_text()
 
 ########################### PART 1 ###########################
-part1_total = 0 
+part1_total = 0
 part1_regex = re.compile(r"mul\((\d{1,3}),(\d{1,3})\)")
 part1_matches = part1_regex.findall(input)
 
@@ -27,12 +27,12 @@ while True:
     if disable_match is None:
         part2_input += unparsed
         break
-    part2_input += unparsed[:disable_match.start()]
-    unparsed = unparsed[disable_match.end():]
+    part2_input += unparsed[: disable_match.start()]
+    unparsed = unparsed[disable_match.end() :]
     enable_match = part2_regex_enable.search(unparsed)
     if enable_match is None:
         break
-    unparsed = unparsed[enable_match.end():]
+    unparsed = unparsed[enable_match.end() :]
 
 part2_matches = part2_regex.findall(part2_input)
 
