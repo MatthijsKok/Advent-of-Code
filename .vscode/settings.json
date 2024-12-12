@@ -1,4 +1,6 @@
 {
   "mypy-type-checker.cwd": "${workspaceFolder}/2024/python",
-  "mypy-type-checker.importStrategy": "fromEnvironment"
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  "rust-analyzer.restartServerOnConfigChange": true,
+  "rust-analyzer.linkedProjects": ["2024/rust/Cargo.toml"]
 }

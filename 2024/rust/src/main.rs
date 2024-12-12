@@ -13,7 +13,7 @@ fn main() {
     trace!("Tracing initialized");
 
     let day01_input = include_str!("day01_input.txt");
-    let (day01_part1, day01_part2) = day01::solve_day01(&day01_input);
+    let (day01_part1, day01_part2) = day01::solve_day01(day01_input);
 
     info!("Day 01 Part 1: {}", day01_part1);
     info!("Day 01 Part 2: {}", day01_part2);

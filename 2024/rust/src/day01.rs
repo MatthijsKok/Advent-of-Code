@@ -18,22 +18,20 @@ fn parse_input(input: &str) -> (Vec<u32>, Vec<u32>) {
         right.push(line[8..].parse::<u32>().unwrap());
     }
 
-    left.sort();
-    right.sort();
+    left.sort_unstable();
+    right.sort_unstable();
 
-    assert!(LIST_LEN == left.len());
-    assert!(LIST_LEN == right.len());
+    debug_assert_eq!(LIST_LEN, left.len());
+    debug_assert_eq!(LIST_LEN, right.len());
 
     (left, right)
 }
 
 #[tracing::instrument(skip_all)]
 fn solve_part_1(left: &[u32], right: &[u32]) -> u32 {
-    let mut sum: i64 = 0;
-    for i in 0..LIST_LEN {
-        sum += (left[i] as i64 - right[i] as i64).abs();
-    }
-    sum as u32
+    left.iter()
+        .zip(right.iter())
+        .fold(0, |acc, (&l, &r)| acc + l.abs_diff(r))
 }
 
 #[tracing::instrument(skip_all)]
