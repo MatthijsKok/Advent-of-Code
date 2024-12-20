@@ -8,7 +8,7 @@ input_file = Path(__file__).parent / "day06_input.txt"
 input = input_file.read_text()
 input_grid: list[list[str]] = [list(line) for line in input.splitlines()]
 
-visited_cells = [[False] * GRID_WIDTH] * GRID_HEIGHT
+visited_cells = [[False for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
 
 print("grid height", len(input_grid))
 print("grid width", len(input_grid[0]))
