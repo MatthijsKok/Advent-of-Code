@@ -34,21 +34,41 @@ impl Dialer {
             DialStep::Left(amount) => amount,
             DialStep::Right(amount) => amount,
         };
+        // already count the "hundreds"
         counter_zeros += step_amount.div_euclid(DIAL_SIZE.into());
         step_amount %= &DIAL_SIZE.into();
 
-        match step {
-            DialStep::Left(_) => self.0 -= &step_amount.into(),
-            DialStep::Right(_) => self.0 += &step_amount.into(),
+        // match step {
+        //     DialStep::Left(_) => self.0 -= &step_amount.into(),
+        //     DialStep::Right(_) => self.0 += &step_amount.into(),
+        // };
+        // if self.0 < 0 || self.0 > 100 {
+        //     counter_zeros += 1;
+        // }
+
+        let p = match step {
+            DialStep::Left(_) => self.0 - i32::from(step_amount),
+            DialStep::Right(_) => self.0 + i32::from(step_amount),
         };
-        if self.0 < 0 || self.0 > 100 {
+        trace!(p);
+        trace!("{}", self.0 + i32::from(step_amount));
+        if p == 0 {
+            counter_zeros += 1;
+        }
+        if p > 100 {
             counter_zeros += 1;
         }
 
+        self.0 = p.rem_euclid(DIAL_SIZE.into());
         self.0 = self.0.rem_euclid(DIAL_SIZE.into());
         counter_zeros
     }
 }
+
+// 6225 < ANSWER < 6269
+// 6226 also no, desperation
+//
+
 
 #[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> u32 {
