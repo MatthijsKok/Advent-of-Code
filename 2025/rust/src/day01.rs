@@ -1,14 +1,16 @@
-const DIAL_SIZE: i16 = 100;
+use tracing::trace;
+
+const DIAL_SIZE: u8 = 100;
 
 enum DialStep {
-    Left(i16),
-    Right(i16),
+    Left(u16),
+    Right(u16),
 }
 
 impl From<&str> for DialStep {
     fn from(value: &str) -> Self {
         let (direction, amount) = value.split_at(1);
-        let clicks: i16 = amount.parse().expect("dial step amount not a i16");
+        let clicks: u16 = amount.parse().expect("dial step amount not a u16");
         match direction {
             "L" => Self::Left(clicks),
             "R" => Self::Right(clicks),
@@ -18,37 +20,54 @@ impl From<&str> for DialStep {
 }
 
 #[repr(transparent)]
-struct Dialer(pub i16);
+struct Dialer(pub i32);
 
 impl Dialer {
     pub fn new() -> Self {
         Dialer(50)
     }
 
-    pub fn dial(&mut self, step: DialStep) {
-        let step_amount = match step {
+    pub fn dial(&mut self, step: DialStep) -> u16 {
+        let mut counter_zeros: u16 = 0;
+
+        let mut step_amount: u16 = match step {
             DialStep::Left(amount) => amount,
             DialStep::Right(amount) => amount,
-        } % DIAL_SIZE;
-        self.0 += DIAL_SIZE;
-        match step {
-            DialStep::Left(_) => self.0 -= step_amount,
-            DialStep::Right(_) => self.0 += step_amount,
         };
-        self.0 %= DIAL_SIZE;
+        counter_zeros += step_amount.div_euclid(DIAL_SIZE.into());
+        step_amount %= &DIAL_SIZE.into();
+
+        match step {
+            DialStep::Left(_) => self.0 -= &step_amount.into(),
+            DialStep::Right(_) => self.0 += &step_amount.into(),
+        };
+        if self.0 < 0 || self.0 > 100 {
+            counter_zeros += 1;
+        }
+
+        self.0 = self.0.rem_euclid(DIAL_SIZE.into());
+        counter_zeros
     }
 }
 
 #[tracing::instrument(skip_all)]
-pub fn solve_part1(input: &str) -> i32 {
-    let mut counter = 0;
+pub fn solve_part1(input: &str) -> u32 {
+    let mut counter: u32 = 0;
     let mut dialer = Dialer::new();
 
-    for line in input.lines() {
-        dialer.dial(line.into());
-        if dialer.0 == 0 {
-            counter += 1;
-        }
+    for line in input.lines().take(120) {
+        let old_dial = dialer.0;
+        // trace!(" line: {:5} dial: {:2} counter: {}", line, dialer.0, counter);
+        let amount_passed_zero = dialer.dial(line.into());
+        trace!(
+            "{:2} {:4} {:2} {}  {}",
+            old_dial, line, dialer.0, counter, amount_passed_zero
+        );
+        counter += &amount_passed_zero.into();
+        // if dialer.0 == 0 {
+        //     counter += 1;
+        // }
+        // trace!("");
     }
     counter
 }
