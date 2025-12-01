@@ -7,7 +7,6 @@ fn main() {
     let tracing_subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_max_level(tracing::Level::TRACE)
         .with_span_events(FmtSpan::CLOSE)
-        .without_time()
         .finish();
     tracing::subscriber::set_global_default(tracing_subscriber)
         .expect("setting default subscriber failed");

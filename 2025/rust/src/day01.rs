@@ -1,5 +1,3 @@
-use tracing::trace;
-
 const DIAL_SIZE: u8 = 100;
 
 enum DialStep {
@@ -30,64 +28,40 @@ impl Dialer {
     pub fn dial(&mut self, step: DialStep) -> u16 {
         let mut counter_zeros: u16 = 0;
 
-        let mut step_amount: u16 = match step {
-            DialStep::Left(amount) => amount,
-            DialStep::Right(amount) => amount,
-        };
-        // already count the "hundreds"
-        counter_zeros += step_amount.div_euclid(DIAL_SIZE.into());
-        step_amount %= &DIAL_SIZE.into();
+        match step {
+            DialStep::Left(amount) => {
+                let dist: u16 = if self.0 == 0 { 100 } else { self.0 as u16 };
+                // let mut dist: u16 = self.0 as u16;
+                // if dist == 0 {
+                //     dist = 100
+                // };
 
-        // match step {
-        //     DialStep::Left(_) => self.0 -= &step_amount.into(),
-        //     DialStep::Right(_) => self.0 += &step_amount.into(),
-        // };
-        // if self.0 < 0 || self.0 > 100 {
-        //     counter_zeros += 1;
-        // }
+                if amount >= dist {
+                    let remaining: u16 = amount - dist;
+                    counter_zeros += (remaining / DIAL_SIZE as u16) + 1;
+                }
+                // let a = (amount as i32 - self.0).max(0);
+                // let _ = amount.saturating_sub(self.0 as u16);
 
-        let p = match step {
-            DialStep::Left(_) => self.0 - i32::from(step_amount),
-            DialStep::Right(_) => self.0 + i32::from(step_amount),
-        };
-        trace!(p);
-        trace!("{}", self.0 + i32::from(step_amount));
-        if p == 0 {
-            counter_zeros += 1;
+                self.0 = (self.0 - i32::from(amount)).rem_euclid(DIAL_SIZE.into());
+            }
+            DialStep::Right(amount) => {
+                counter_zeros += (self.0 as u16 + amount) / u16::from(DIAL_SIZE);
+                self.0 = (self.0 + i32::from(amount)) % i32::from(DIAL_SIZE);
+            }
         }
-        if p > 100 {
-            counter_zeros += 1;
-        }
-
-        self.0 = p.rem_euclid(DIAL_SIZE.into());
-        self.0 = self.0.rem_euclid(DIAL_SIZE.into());
         counter_zeros
     }
 }
 
-// 6225 < ANSWER < 6269
-// 6226 also no, desperation
-//
-
-
 #[tracing::instrument(skip_all)]
-pub fn solve_part1(input: &str) -> u32 {
-    let mut counter: u32 = 0;
+pub fn solve_part1(input: &str) -> u16 {
+    let mut counter: u16 = 0;
     let mut dialer = Dialer::new();
 
-    for line in input.lines().take(120) {
-        let old_dial = dialer.0;
-        // trace!(" line: {:5} dial: {:2} counter: {}", line, dialer.0, counter);
+    for line in input.lines() {
         let amount_passed_zero = dialer.dial(line.into());
-        trace!(
-            "{:2} {:4} {:2} {}  {}",
-            old_dial, line, dialer.0, counter, amount_passed_zero
-        );
-        counter += &amount_passed_zero.into();
-        // if dialer.0 == 0 {
-        //     counter += 1;
-        // }
-        // trace!("");
+        counter += amount_passed_zero;
     }
     counter
 }
