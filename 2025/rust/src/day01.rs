@@ -17,7 +17,6 @@ impl From<&str> for DialStep {
     }
 }
 
-#[repr(transparent)]
 struct DialerOne(pub i16);
 
 impl DialerOne {
@@ -72,8 +71,7 @@ pub fn solve_part1(input: &str) -> u16 {
         .sum()
 }
 
-#[repr(transparent)]
-struct DialerTwo(pub i32);
+struct DialerTwo(pub i16);
 
 impl DialerTwo {
     pub fn new() -> Self {
@@ -81,31 +79,19 @@ impl DialerTwo {
     }
 
     pub fn dial(&mut self, step: DialStep) -> u16 {
-        let mut counter_zeros: u16 = 0;
-
         match step {
             DialStep::Left(amount) => {
                 let dist: u16 = if self.0 == 0 { 100 } else { self.0 as u16 };
-                // let mut dist: u16 = self.0 as u16;
-                // if dist == 0 {
-                //     dist = 100
-                // };
-
-                if amount >= dist {
-                    let remaining: u16 = amount - dist;
-                    counter_zeros += (remaining / DIAL_SIZE as u16) + 1;
-                }
-                // let a = (amount as i32 - self.0).max(0);
-                // let _ = amount.saturating_sub(self.0 as u16);
-
-                self.0 = (self.0 - i32::from(amount)).rem_euclid(DIAL_SIZE.into());
+                let zeros = (amount + 100 - dist) / 100;
+                self.0 = (self.0 - amount as i16).rem_euclid(DIAL_SIZE.into());
+                zeros
             }
             DialStep::Right(amount) => {
-                counter_zeros += (self.0 as u16 + amount) / u16::from(DIAL_SIZE);
-                self.0 = (self.0 + i32::from(amount)) % i32::from(DIAL_SIZE);
+                let zeros = (self.0 as u16 + amount) / u16::from(DIAL_SIZE);
+                self.0 = (self.0 + amount as i16) % i16::from(DIAL_SIZE);
+                zeros
             }
         }
-        counter_zeros
     }
 }
 
