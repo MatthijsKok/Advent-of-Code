@@ -24,6 +24,8 @@ fn main() {
     let day02_input = include_str!("day02_input.txt");
     let day02_part1 = day02::solve_part1(day02_input);
     info!("Day 02 Part 1: {day02_part1}");
+    let day02_part2 = day02::solve_part2(day02_input);
+    info!("Day 02 Part 2: {day02_part2}");
 
     trace!("See you tomorrow!");
 }

@@ -15,7 +15,7 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
 
 #[tracing::instrument(skip_all)]
 pub(crate) fn solve_part2(input: &str) -> usize {
-    // Answer = ???
+    // Answer = 15704845910
     input
         .lines()
         .next()
@@ -31,14 +31,26 @@ pub(crate) fn solve_part2(input: &str) -> usize {
 /// some sequence of digits repeated _any_ number of times.
 fn is_silly_id_part2(id: &usize) -> bool {
     let s = id.to_string();
-    let (half1, half2) = s.split_at(s.len() / 2);
-    half1 == half2
+    for i in 1..=s.len() / 2 {
+        if s.len() % i != 0 {
+            // string has to be exactly divisible by `i`
+            continue;
+        };
+        // split string into chunks of size `i`
+        let mut chunks = s.as_bytes().chunks_exact(i);
+        let first_chunk = chunks.next().unwrap();
+        if chunks.any(|c| c != first_chunk) {
+            continue;
+        };
+        return true;
+    }
+    false
 }
 
 #[test]
 fn silly_ids_part2() {
     assert!(!is_silly_id_part2(&1));
-    assert!(!is_silly_id_part2(&111));
+    assert!(is_silly_id_part2(&111));
     assert!(is_silly_id_part2(&1212));
     assert!(is_silly_id_part2(&11));
     assert!(!is_silly_id_part2(&12312));
@@ -117,19 +129,23 @@ fn examples_given_part2() {
 #[test]
 fn examples_given_part2_total() {
     assert_eq!(
-        range_from_string("11-22")
-            .chain(range_from_string("95-115"))
-            .chain(range_from_string("998-1012"))
-            .chain(range_from_string("1188511880-1188511890"))
-            .chain(range_from_string("222220-222224"))
-            .chain(range_from_string("1698522-1698528"))
-            .chain(range_from_string("446443-446449"))
-            .chain(range_from_string("38593856-38593862"))
-            .chain(range_from_string("565653-565659"))
-            .chain(range_from_string("824824821-824824827"))
-            .chain(range_from_string("2121212118-2121212124"))
-            .filter(is_silly_id_part2)
-            .sum::<usize>(),
+        [
+            "11-22",
+            "95-115",
+            "998-1012",
+            "1188511880-1188511890",
+            "222220-222224",
+            "1698522-1698528",
+            "446443-446449",
+            "38593856-38593862",
+            "565653-565659",
+            "824824821-824824827",
+            "2121212118-2121212124",
+        ]
+        .into_iter()
+        .flat_map(range_from_string)
+        .filter(is_silly_id_part2)
+        .sum::<usize>(),
         4174379265usize
     );
 }
@@ -169,16 +185,20 @@ fn silly_ids_part1() {
 #[test]
 fn examples_given_part1() {
     assert_eq!(
-        range_from_string("11-22")
-            .chain(range_from_string("95-115"))
-            .chain(range_from_string("998-1012"))
-            .chain(range_from_string("1188511880-1188511890"))
-            .chain(range_from_string("222220-222224"))
-            .chain(range_from_string("1698522-1698528"))
-            .chain(range_from_string("446443-446449"))
-            .chain(range_from_string("38593856-38593862"))
-            .filter(is_silly_id_part1)
-            .sum::<usize>(),
+        [
+            "11-22",
+            "95-115",
+            "998-1012",
+            "1188511880-1188511890",
+            "222220-222224",
+            "1698522-1698528",
+            "446443-446449",
+            "38593856-38593862",
+        ]
+        .into_iter()
+        .flat_map(range_from_string)
+        .filter(is_silly_id_part1)
+        .sum::<usize>(),
         1227775554usize
     );
 }
