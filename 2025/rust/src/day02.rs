@@ -14,9 +14,9 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
 }
 
 #[tracing::instrument(skip_all)]
-pub(crate) fn solve_part1(day02_input: &str) -> usize {
+pub(crate) fn solve_part1(input: &str) -> usize {
     // Answer = 5398419778
-    day02_input
+    input
         .lines()
         .next()
         .unwrap()
@@ -24,33 +24,29 @@ pub(crate) fn solve_part1(day02_input: &str) -> usize {
         .filter(|s| s.len() % 4 != 3)
         .par_bridge()
         .flat_map(range_from_string)
-        .filter(|num| is_silly_id_part1(&num.to_string()))
+        .filter(is_silly_id_part1)
         .sum()
 }
 
-/// An ID is a silly ID if it is made of _only_ some sequence of digits repeated twice.
-fn is_silly_id_part1(id: &str) -> bool {
-    let (half1, half2) = id.split_at(id.len() / 2);
+/// An ID is a silly ID if it is made of _only_
+/// some sequence of digits repeated twice.
+fn is_silly_id_part1(id: &usize) -> bool {
+    let s = id.to_string();
+    let (half1, half2) = s.split_at(s.len() / 2);
     half1 == half2
 }
 
 #[test]
 fn silly_ids_part1() {
-    assert!(!is_silly_id_part1("1"));
-    assert!(!is_silly_id_part1("111"));
-    assert!(is_silly_id_part1("1212"));
-    assert!(is_silly_id_part1("11"));
-    assert!(!is_silly_id_part1("12312"));
+    assert!(!is_silly_id_part1(&1));
+    assert!(!is_silly_id_part1(&111));
+    assert!(is_silly_id_part1(&1212));
+    assert!(is_silly_id_part1(&11));
+    assert!(!is_silly_id_part1(&12312));
 }
 
 #[test]
 fn examples_given_part1() {
-    for num in range_from_string("11-22") {
-        if is_silly_id_part1(&num.to_string()) {
-            println!("{}", num);
-        }
-    }
-
     assert_eq!(
         range_from_string("11-22")
             .chain(range_from_string("95-115"))
@@ -60,7 +56,7 @@ fn examples_given_part1() {
             .chain(range_from_string("1698522-1698528"))
             .chain(range_from_string("446443-446449"))
             .chain(range_from_string("38593856-38593862"))
-            .filter(|num| is_silly_id_part1(&num.to_string()))
+            .filter(is_silly_id_part1)
             .sum::<usize>(),
         1227775554usize
     );
