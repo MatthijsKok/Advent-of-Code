@@ -46,6 +46,59 @@ fn is_silly_id_part2(id: &usize) -> bool {
     false
 }
 
+#[tracing::instrument(skip_all)]
+pub(crate) fn solve_part1(input: &str) -> usize {
+    // Answer = 5398419778
+    input
+        .lines()
+        .next()
+        .unwrap()
+        .split(',')
+        .filter(|s| s.len() % 4 != 3)
+        .par_bridge()
+        .flat_map(range_from_string)
+        .filter(is_silly_id_part1)
+        .sum()
+}
+
+/// An ID is a silly ID if it is made of _only_
+/// some sequence of digits repeated twice.
+fn is_silly_id_part1(id: &usize) -> bool {
+    let s = id.to_string();
+    let (half1, half2) = s.split_at(s.len() / 2);
+    half1 == half2
+}
+
+#[test]
+fn silly_ids_part1() {
+    assert!(!is_silly_id_part1(&1));
+    assert!(!is_silly_id_part1(&111));
+    assert!(is_silly_id_part1(&1212));
+    assert!(is_silly_id_part1(&11));
+    assert!(!is_silly_id_part1(&12312));
+}
+
+#[test]
+fn examples_given_part1() {
+    assert_eq!(
+        [
+            "11-22",
+            "95-115",
+            "998-1012",
+            "1188511880-1188511890",
+            "222220-222224",
+            "1698522-1698528",
+            "446443-446449",
+            "38593856-38593862",
+        ]
+        .into_iter()
+        .flat_map(range_from_string)
+        .filter(is_silly_id_part1)
+        .sum::<usize>(),
+        1227775554usize
+    );
+}
+
 #[test]
 fn silly_ids_part2() {
     assert!(!is_silly_id_part2(&1));
@@ -146,59 +199,6 @@ fn examples_given_part2_total() {
         .filter(is_silly_id_part2)
         .sum::<usize>(),
         4174379265usize
-    );
-}
-
-#[tracing::instrument(skip_all)]
-pub(crate) fn solve_part1(input: &str) -> usize {
-    // Answer = 5398419778
-    input
-        .lines()
-        .next()
-        .unwrap()
-        .split(',')
-        .filter(|s| s.len() % 4 != 3)
-        .par_bridge()
-        .flat_map(range_from_string)
-        .filter(is_silly_id_part1)
-        .sum()
-}
-
-/// An ID is a silly ID if it is made of _only_
-/// some sequence of digits repeated twice.
-fn is_silly_id_part1(id: &usize) -> bool {
-    let s = id.to_string();
-    let (half1, half2) = s.split_at(s.len() / 2);
-    half1 == half2
-}
-
-#[test]
-fn silly_ids_part1() {
-    assert!(!is_silly_id_part1(&1));
-    assert!(!is_silly_id_part1(&111));
-    assert!(is_silly_id_part1(&1212));
-    assert!(is_silly_id_part1(&11));
-    assert!(!is_silly_id_part1(&12312));
-}
-
-#[test]
-fn examples_given_part1() {
-    assert_eq!(
-        [
-            "11-22",
-            "95-115",
-            "998-1012",
-            "1188511880-1188511890",
-            "222220-222224",
-            "1698522-1698528",
-            "446443-446449",
-            "38593856-38593862",
-        ]
-        .into_iter()
-        .flat_map(range_from_string)
-        .filter(is_silly_id_part1)
-        .sum::<usize>(),
-        1227775554usize
     );
 }
 
