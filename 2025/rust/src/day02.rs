@@ -16,21 +16,15 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
 
 #[tracing::instrument(skip_all)]
 pub(crate) fn solve_part1(day02_input: &str) -> usize {
-    let mut counter: usize = 0;
-    let ranges = day02_input
+    // Answer = 5398419778
+    day02_input
         .lines()
         .next()
         .unwrap()
         .split(',')
-        .collect::<Vec<_>>();
-    for range in ranges {
-        for num in range_from_string(range) {
-            if is_silly_id_part1(&num.to_string()) {
-                counter += num;
-            }
-        }
-    }
-    counter
+        .flat_map(range_from_string)
+        .filter(|num| is_silly_id_part1(&num.to_string()))
+        .sum()
 }
 
 /// An ID is a silly ID if it is made of _only_ some sequence of digits repeated twice.
