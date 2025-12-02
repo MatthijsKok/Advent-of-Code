@@ -7,7 +7,7 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
         .unwrap()
 }
 
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part2(input: &str) -> usize {
     // Answer = 15704845910
     input
@@ -39,7 +39,7 @@ fn is_silly_id_part2(id: &usize) -> bool {
     false
 }
 
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part1(input: &str) -> usize {
     // Answer = 5398419778
     input

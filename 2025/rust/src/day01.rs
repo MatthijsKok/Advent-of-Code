@@ -18,11 +18,46 @@ impl From<&str> for DialStep {
 }
 
 #[repr(transparent)]
-struct Dialer(pub i32);
+struct DialerOne(pub u16);
 
-impl Dialer {
+impl DialerOne {
     pub fn new() -> Self {
-        Dialer(50)
+        DialerOne(50)
+    }
+
+    pub fn dial(&mut self, step: DialStep) {
+        let step_amount: u16 = match step {
+            DialStep::Left(amount) => amount,
+            DialStep::Right(amount) => amount,
+        } % 100;
+        self.0 += 100;
+        match step {
+            DialStep::Left(_) => self.0 -= step_amount,
+            DialStep::Right(_) => self.0 += step_amount,
+        };
+        self.0 %= 100;
+    }
+}
+
+#[tracing::instrument(skip_all, ret)]
+pub fn solve_part1(input: &str) -> u16 {
+    // Answer = 1036
+    let mut dialer = DialerOne::new();
+    input
+        .lines()
+        .map(|line| {
+            dialer.dial(line.into());
+            if dialer.0 == 0 { 1 } else { 0 }
+        })
+        .sum()
+}
+
+#[repr(transparent)]
+struct DialerTwo(pub i32);
+
+impl DialerTwo {
+    pub fn new() -> Self {
+        DialerTwo(50)
     }
 
     pub fn dial(&mut self, step: DialStep) -> u16 {
@@ -54,10 +89,11 @@ impl Dialer {
     }
 }
 
-#[tracing::instrument(skip_all)]
-pub fn solve_part1(input: &str) -> u16 {
+#[tracing::instrument(skip_all, ret)]
+pub fn solve_part2(input: &str) -> u16 {
+    // Answer = 6228
     let mut counter: u16 = 0;
-    let mut dialer = Dialer::new();
+    let mut dialer = DialerTwo::new();
 
     for line in input.lines() {
         let amount_passed_zero = dialer.dial(line.into());

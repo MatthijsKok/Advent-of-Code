@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use tracing::{info, trace};
+use tracing::info;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 mod day01;
@@ -12,27 +12,20 @@ fn main() {
         .with_max_level(tracing::Level::TRACE)
         .with_span_events(FmtSpan::CLOSE)
         .finish();
-    tracing::subscriber::set_global_default(tracing_subscriber)
-        .expect("setting default subscriber failed");
-    trace!("Tracing initialized");
-
+    tracing::subscriber::set_global_default(tracing_subscriber).unwrap();
     info!("Hello, Advent of Code!");
 
-    // let day01_part1_input = include_str!("day01_input.txt");
-    // let day01_part1 = day01::solve_part1(day01_part1_input);
-    // info!("Day 01 Part 1: {day01_part1}");
+    let day01_input = include_str!("day01_input.txt");
+    day01::solve_part1(day01_input);
+    day01::solve_part2(day01_input);
 
-    // let day02_input = include_str!("day02_input.txt");
-    // let day02_part1 = day02::solve_part1(day02_input);
-    // let day02_part2 = day02::solve_part2(day02_input);
-    // info!("Day 02 Part 1: {day02_part1}");
-    // info!("Day 02 Part 2: {day02_part2}");
+    let day02_input = include_str!("day02_input.txt");
+    day02::solve_part1(day02_input);
+    day02::solve_part2(day02_input);
 
     let day03_input = include_str!("day03_input.txt");
-    let day03_part1 = day03::solve_part1(day03_input);
-    let day03_part2 = day03::solve_part2(day03_input);
-    info!("Day 03 Part 1: {day03_part1}");
-    info!("Day 03 Part 2: {day03_part2}");
+    day03::solve_part1(day03_input);
+    day03::solve_part2(day03_input);
 
-    trace!("See you tomorrow!");
+    info!("See you tomorrow!");
 }
