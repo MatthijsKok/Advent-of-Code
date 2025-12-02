@@ -2,12 +2,7 @@ use rayon::prelude::*;
 
 fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
     s.split_once('-')
-        .map(|(a, b)| {
-            (
-                a.parse::<usize>().expect("range start not usize"),
-                b.parse::<usize>().expect("range end not usize"),
-            )
-        })
+        .map(|(a, b)| (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()))
         .map(|(a, b)| a..=b)
         .unwrap()
 }
@@ -19,8 +14,7 @@ pub(crate) fn solve_part2(input: &str) -> usize {
         .lines()
         .next()
         .unwrap()
-        .split(',')
-        .par_bridge()
+        .par_split(',')
         .flat_map(range_from_string)
         .filter(is_silly_id_part2)
         .sum()
@@ -31,17 +25,16 @@ pub(crate) fn solve_part2(input: &str) -> usize {
 fn is_silly_id_part2(id: &usize) -> bool {
     let s = id.to_string();
     for i in 1..=s.len() / 2 {
-        if s.len() % i != 0 {
+        if !s.len().is_multiple_of(i) {
             // string has to be exactly divisible by `i`
             continue;
         };
         // split string into chunks of size `i`
         let mut chunks = s.as_bytes().chunks_exact(i);
         let first_chunk = chunks.next().unwrap();
-        if chunks.any(|c| c != first_chunk) {
-            continue;
+        if chunks.all(|c| c == first_chunk) {
+            return true;
         };
-        return true;
     }
     false
 }
@@ -53,9 +46,8 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .lines()
         .next()
         .unwrap()
-        .split(',')
+        .par_split(',')
         .filter(|s| s.len() % 4 != 3)
-        .par_bridge()
         .flat_map(range_from_string)
         .filter(is_silly_id_part1)
         .sum()
@@ -65,6 +57,9 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 /// some sequence of digits repeated twice.
 fn is_silly_id_part1(id: &usize) -> bool {
     let s = id.to_string();
+    if !s.len().is_multiple_of(2) {
+        return false;
+    }
     let (half1, half2) = s.split_at(s.len() / 2);
     half1 == half2
 }
