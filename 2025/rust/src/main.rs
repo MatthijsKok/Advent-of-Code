@@ -15,15 +15,15 @@ fn main() {
     tracing::subscriber::set_global_default(tracing_subscriber).unwrap();
     info!("Hello, Advent of Code!");
 
-    let day01_input = include_str!("day01_input.txt");
+    let day01_input = include_str!("day01/input.txt");
     day01::solve_part1(day01_input);
     day01::solve_part2(day01_input);
 
-    let day02_input = include_str!("day02_input.txt");
+    let day02_input = include_str!("day02/input.txt");
     day02::solve_part1(day02_input);
     day02::solve_part2(day02_input);
 
-    let day03_input = include_str!("day03_input.txt");
+    let day03_input = include_str!("day03/input.txt");
     day03::solve_part1(day03_input);
     day03::solve_part2(day03_input);
 
