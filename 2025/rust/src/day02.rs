@@ -22,6 +22,7 @@ pub(crate) fn solve_part1(day02_input: &str) -> usize {
         .next()
         .unwrap()
         .split(',')
+        .par_bridge()
         .flat_map(range_from_string)
         .filter(|num| is_silly_id_part1(&num.to_string()))
         .sum()
