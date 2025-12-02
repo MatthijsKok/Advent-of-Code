@@ -1,7 +1,10 @@
+#![allow(unused)]
+
 use tracing::{info, trace};
 use tracing_subscriber::fmt::format::FmtSpan;
 
 mod day01;
+mod day02;
 
 fn main() {
     let tracing_subscriber = tracing_subscriber::FmtSubscriber::builder()
@@ -13,9 +16,14 @@ fn main() {
     trace!("Tracing initialized");
 
     info!("Hello, Advent of Code!");
-    let day01_part1_input = include_str!("day01_input.txt");
-    let day01_part1 = day01::solve_part1(day01_part1_input);
-    info!("Day 01 Part 1: {day01_part1}");
+
+    // let day01_part1_input = include_str!("day01_input.txt");
+    // let day01_part1 = day01::solve_part1(day01_part1_input);
+    // info!("Day 01 Part 1: {day01_part1}");
+
+    let day02_input = include_str!("day02_input.txt");
+    let day02_part1 = day02::solve_part1(day02_input);
+    info!("Day 02 Part 1: {day02_part1}");
 
     trace!("See you tomorrow!");
 }
