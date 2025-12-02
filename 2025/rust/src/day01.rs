@@ -18,7 +18,7 @@ impl From<&str> for DialStep {
 }
 
 #[repr(transparent)]
-struct DialerOne(pub u16);
+struct DialerOne(pub i16);
 
 impl DialerOne {
     pub fn new() -> Self {
@@ -26,9 +26,9 @@ impl DialerOne {
     }
 
     pub fn dial(&mut self, step: DialStep) {
-        let step_amount: u16 = match step {
-            DialStep::Left(amount) => amount,
-            DialStep::Right(amount) => amount,
+        let step_amount: i16 = match step {
+            DialStep::Left(amount) => amount as i16,
+            DialStep::Right(amount) => amount as i16,
         } % 100;
         self.0 += 100;
         match step {
@@ -37,17 +37,37 @@ impl DialerOne {
         };
         self.0 %= 100;
     }
+
+    pub fn dial_bytes(&mut self, line: &[u8]) {
+        assert!(2 <= line.len() && line.len() <= 4);
+        let mut amount: i16 = 0;
+        let is_right = line[0] == b'R';
+        for &b in &line[1..] {
+            amount = amount * 10 + (b - b'0') as i16;
+        }
+        let step = amount * (2 * is_right as i16 - 1);
+        self.0 = (self.0 + step).rem_euclid(100);
+    }
 }
 
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part1(input: &str) -> u16 {
     // Answer = 1036
     let mut dialer = DialerOne::new();
+    // let _: u16 = input
+    //     .lines()
+    //     .map(|line| {
+    //         dialer.dial(line.into());
+    //         u16::from(dialer.0 == 0)
+    //     })
+    //     .sum();
     input
-        .lines()
+        .as_bytes()
+        .split(|&b| b == b'\n')
+        .filter(|line| !line.is_empty())
         .map(|line| {
-            dialer.dial(line.into());
-            if dialer.0 == 0 { 1 } else { 0 }
+            dialer.dial_bytes(line);
+            u16::from(dialer.0 == 0)
         })
         .sum()
 }
