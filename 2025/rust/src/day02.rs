@@ -1,5 +1,4 @@
 use rayon::prelude::*;
-use tracing::trace;
 
 fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
     let (num1, num2) = s
@@ -22,6 +21,7 @@ pub(crate) fn solve_part1(day02_input: &str) -> usize {
         .next()
         .unwrap()
         .split(',')
+        .filter(|s| s.len() % 4 != 3)
         .par_bridge()
         .flat_map(range_from_string)
         .filter(|num| is_silly_id_part1(&num.to_string()))
@@ -64,4 +64,29 @@ fn examples_given_part1() {
             .sum::<usize>(),
         1227775554usize
     );
+}
+
+#[test]
+fn count_odd_numbers() {
+    let day02_input = include_str!("day02_input.txt");
+    let mut evens: usize = 0;
+    let mut odds: usize = 0;
+    for pair in day02_input.lines().next().unwrap().split(',') {
+        let (s1, s2) = pair.split_once('-').unwrap();
+        if s1.len() % 2 == 1 && s2.len() % 2 == 1 {
+            // both range start and range end are numbers with uneven amount of digits.
+            // Thus the whole range can be discarded immediately.
+            odds += s2.parse::<usize>().unwrap() - s1.parse::<usize>().unwrap();
+        } else {
+            evens += s2.parse::<usize>().unwrap() - s1.parse::<usize>().unwrap();
+        }
+    }
+    println!("total even: {}", evens); // 1135383
+    println!("total odd:  {}", odds); //  923901
+    println!(
+        "odd percentage: {:.2}%",
+        odds as f64 / (evens + odds) as f64 * 100.
+    );
+    // This early discarding saves:
+    // 923901 / (1135383 + 923901) * 100 = 44.87% of checks!
 }
