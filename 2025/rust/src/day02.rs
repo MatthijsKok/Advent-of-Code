@@ -1,16 +1,15 @@
 use rayon::prelude::*;
 
 fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
-    let (num1, num2) = s
-        .split_once('-')
+    s.split_once('-')
         .map(|(a, b)| {
             (
                 a.parse::<usize>().expect("range start not usize"),
                 b.parse::<usize>().expect("range end not usize"),
             )
         })
-        .unwrap();
-    num1..=num2
+        .map(|(a, b)| a..=b)
+        .unwrap()
 }
 
 #[tracing::instrument(skip_all)]
