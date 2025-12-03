@@ -199,7 +199,7 @@ fn examples_given_part2_total() {
 
 #[test]
 fn count_odd_numbers() {
-    let day02_input = include_str!("day02_input.txt");
+    let day02_input = include_str!("input.txt");
     let mut evens: usize = 0;
     let mut odds: usize = 0;
     for pair in day02_input.lines().next().unwrap().split(',') {

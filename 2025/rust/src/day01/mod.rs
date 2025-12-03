@@ -37,7 +37,8 @@ impl DialerOne {
         self.0 %= 100;
     }
 
-    pub fn dial_bytes(&mut self, line: &[u8]) {
+    #[inline]
+    pub fn dial_bytes(&mut self, line: &[u8]) -> u16 {
         assert!(2 <= line.len() && line.len() <= 4);
         let mut amount: i16 = 0;
         let is_right = line[0] == b'R';
@@ -46,6 +47,7 @@ impl DialerOne {
         }
         let step = amount * (2 * is_right as i16 - 1);
         self.0 = (self.0 + step).rem_euclid(100);
+        u16::from(self.0 == 0)
     }
 }
 
@@ -53,21 +55,11 @@ impl DialerOne {
 pub fn solve_part1(input: &str) -> u16 {
     // Answer = 1036
     let mut dialer = DialerOne::new();
-    // let _: u16 = input
-    //     .lines()
-    //     .map(|line| {
-    //         dialer.dial(line.into());
-    //         u16::from(dialer.0 == 0)
-    //     })
-    //     .sum();
     input
         .as_bytes()
         .split(|&b| b == b'\n')
         .filter(|line| !line.is_empty())
-        .map(|line| {
-            dialer.dial_bytes(line);
-            u16::from(dialer.0 == 0)
-        })
+        .map(|line| dialer.dial_bytes(line))
         .sum()
 }
 
@@ -98,12 +90,6 @@ impl DialerTwo {
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> u16 {
     // Answer = 6228
-    let mut counter: u16 = 0;
     let mut dialer = DialerTwo::new();
-
-    for line in input.lines() {
-        let amount_passed_zero = dialer.dial(line.into());
-        counter += amount_passed_zero;
-    }
-    counter
+    input.lines().map(|line| dialer.dial(line.into())).sum()
 }
