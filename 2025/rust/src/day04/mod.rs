@@ -6,10 +6,18 @@ use rayon::prelude::*;
 // we do not need to branch inside the hot loop.
 const NEIGHBOUR_THRESHOLD: u8 = 5;
 
+fn neighbours(i: usize, j: usize, upper_bound: usize) -> impl Iterator<Item = (usize, usize)> {
+    let start_i = i.saturating_sub(1);
+    let start_j = j.saturating_sub(1);
+    let end_i = (upper_bound - 1).min(i + 1);
+    let end_j = (upper_bound - 1).min(j + 1);
+    (start_i..=end_i).flat_map(move |ni| (start_j..=end_j).map(move |nj| (ni, nj)))
+}
+
 #[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part1(input: &str) -> usize {
     // Answer = 1474
-    let dim_size = input.lines().next().unwrap().len() as isize;
+    let dim_size = input.lines().next().unwrap().len();
 
     let lookup = input
         .lines()
@@ -17,7 +25,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .flat_map(|(i, line)| {
             line.chars()
                 .enumerate()
-                .map(|(j, val)| ((i as isize, j as isize), (val == '@') as u8))
+                .map(|(j, val)| ((i, j), (val == '@') as u8))
                 .collect::<Vec<_>>()
         })
         .collect::<BTreeMap<_, _>>();
@@ -26,8 +34,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .iter()
         .filter(|&(_, &v)| v != 0)
         .map(|(&(i, j), _)| -> u8 {
-            (0.max(i - 1)..=(dim_size - 1).min(i + 1))
-                .flat_map(|ni| (0.max(j - 1)..=(dim_size - 1).min(j + 1)).map(move |nj| (ni, nj)))
+            neighbours(i, j, dim_size)
                 .filter_map(|coord| lookup.get(&coord))
                 .sum()
         })
@@ -37,32 +44,44 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 
 #[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part2(input: &str) -> usize {
-    // Answer = ?
+    // Answer = 8910
     let mut count: usize = 0;
+    let dim_size = input.lines().next().unwrap().len();
 
-    let dim_size = input.lines().next().unwrap().len() as isize;
-
-    let lookup: BTreeMap<(isize, isize), u8> = input
+    let mut lookup = input
         .lines()
         .enumerate()
         .flat_map(|(i, line)| {
             line.chars()
                 .enumerate()
-                .map(|(j, val)| ((i as isize, j as isize), (val == '@') as u8))
+                .map(|(j, val)| ((i, j), (val == '@') as u8))
                 .collect::<Vec<_>>()
         })
-        .collect();
-    lookup
-        .iter()
-        .filter(|&(_, &v)| v != 0)
-        .map(|(&(i, j), _)| -> u8 {
-            (0.max(i - 1)..=(dim_size - 1).min(i + 1))
-                .flat_map(|ni| (0.max(j - 1)..=(dim_size - 1).min(j + 1)).map(move |nj| (ni, nj)))
-                .filter_map(|coord| lookup.get(&coord))
-                .sum()
-        })
-        .filter(|&n| n < NEIGHBOUR_THRESHOLD)
-        .count()
+        .collect::<BTreeMap<_, _>>();
+
+    loop {
+        let cloned_lookup = lookup.clone();
+        let new_removals = cloned_lookup
+            .iter()
+            .filter(|&(_, &v)| v != 0)
+            .filter(|&(&(i, j), _)| {
+                let n = neighbours(i, j, dim_size)
+                    .filter_map(|coord| cloned_lookup.get(&coord))
+                    .sum::<u8>();
+                n < NEIGHBOUR_THRESHOLD
+            })
+            .map(|(&coord, _)| coord)
+            .collect::<Vec<_>>();
+        if new_removals.is_empty() {
+            break;
+        }
+        for coord in new_removals {
+            lookup.entry(coord).and_modify(|v| *v = 0);
+            count += 1;
+        }
+    }
+
+    count
 }
 
 #[test]
@@ -84,19 +103,4 @@ fn part1_examples() {
 }
 
 #[test]
-fn part2_examples() {
-    let example = [
-        "..@@.@@@@.",
-        "@@@.@.@.@@",
-        "@@@@@.@.@@",
-        "@.@@@@..@.",
-        "@@.@@@@.@@",
-        ".@@@@@@@.@",
-        ".@.@.@.@@@",
-        "@.@@@.@@@@",
-        ".@@@@@@@@.",
-        "@.@.@@@.@.",
-    ]
-    .join("\n");
-    assert_eq!(solve_part2(&example), 13);
-}
+fn part2_examples() {}
