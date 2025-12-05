@@ -23,15 +23,15 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .lines()
         .enumerate()
         .flat_map(|(i, line)| {
-            line.chars()
+            line.bytes()
                 .enumerate()
-                .map(|(j, val)| ((i, j), (val == '@') as u8))
+                .map(|(j, val)| ((i, j), (val == b'@') as u8))
                 .collect::<Vec<_>>()
         })
         .collect::<BTreeMap<_, _>>();
 
     lookup
-        .iter()
+        .par_iter()
         .filter(|&(_, &v)| v != 0)
         .map(|(&(i, j), _)| -> u8 {
             neighbours(i, j, dim_size)
@@ -52,9 +52,9 @@ pub(crate) fn solve_part2(input: &str) -> usize {
         .lines()
         .enumerate()
         .flat_map(|(i, line)| {
-            line.chars()
+            line.bytes()
                 .enumerate()
-                .map(|(j, val)| ((i, j), (val == '@') as u8))
+                .map(|(j, val)| ((i, j), (val == b'@') as u8))
                 .collect::<Vec<_>>()
         })
         .collect::<BTreeMap<_, _>>();
@@ -62,7 +62,7 @@ pub(crate) fn solve_part2(input: &str) -> usize {
     loop {
         let cloned_lookup = lookup.clone();
         let new_removals = cloned_lookup
-            .iter()
+            .par_iter()
             .filter(|&(_, &v)| v != 0)
             .filter(|&(&(i, j), _)| {
                 let n = neighbours(i, j, dim_size)
