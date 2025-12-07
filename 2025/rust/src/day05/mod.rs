@@ -31,7 +31,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
                 .unwrap(),
         )
     }
-    while let Some(line) = lines.next() {
+    for line in lines {
         ingredients.push(line.parse().unwrap())
     }
 
@@ -54,20 +54,15 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 #[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part2(input: &str) -> usize {
     // Answer = 344486348901788
-    let mut ranges: Vec<RangeInclusive<usize>> = Vec::new();
-    let mut lines = input.lines();
-    while let Some(line) = lines.next()
-        && !line.is_empty()
-    {
-        ranges.push(
-            line.split_once('-')
-                .map(|(lb, ub)| (lb.parse::<usize>().unwrap(), ub.parse::<usize>().unwrap()))
-                .map(|(lb, ub)| lb..=ub)
-                .unwrap(),
-        )
-    }
-    let ranges = merge_all_ranges(ranges);
-    ranges
+    let mut ranges = input
+        .lines()
+        .take_while(|line| !line.is_empty())
+        .map(|line| {
+            let (lb, ub) = line.split_once('-').unwrap();
+            lb.parse::<usize>().unwrap()..=ub.parse::<usize>().unwrap()
+        })
+        .collect::<Vec<_>>();
+    merge_all_ranges(ranges)
         .iter()
         .map(|range| range.end() - range.start() + 1)
         .sum()
