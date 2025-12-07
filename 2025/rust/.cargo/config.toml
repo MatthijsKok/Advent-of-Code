@@ -1,1 +1,4 @@
 rustflags = ["-Ctarget-cpu=native"]
+
+[alias]
+rr = "run --release"
