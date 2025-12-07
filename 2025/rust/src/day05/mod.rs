@@ -35,18 +35,42 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         ingredients.push(line.parse().unwrap())
     }
 
+    // println!("amount of ranges before merge: {}", ranges.len());
+    // 182
+    // dbg!(&ranges);
+
     let ranges = merge_all_ranges(ranges);
 
+    // println!("amount of ranges after  merge: {}", ranges.len());
+    // 78
+    // dbg!(&ranges);
+
     ingredients
-        .par_iter()
+        .iter()
         .filter(|&ingredient| ranges.iter().any(|r| r.contains(ingredient)))
         .count()
 }
 
 #[tracing::instrument(skip_all, ret)]
 pub(crate) fn solve_part2(input: &str) -> usize {
-    // Answer = ?
-    0
+    // Answer = 344486348901788
+    let mut ranges: Vec<RangeInclusive<usize>> = Vec::new();
+    let mut lines = input.lines();
+    while let Some(line) = lines.next()
+        && !line.is_empty()
+    {
+        ranges.push(
+            line.split_once('-')
+                .map(|(lb, ub)| (lb.parse::<usize>().unwrap(), ub.parse::<usize>().unwrap()))
+                .map(|(lb, ub)| lb..=ub)
+                .unwrap(),
+        )
+    }
+    let ranges = merge_all_ranges(ranges);
+    ranges
+        .iter()
+        .map(|range| range.end() - range.start() + 1)
+        .sum()
 }
 
 #[test]
