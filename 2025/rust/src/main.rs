@@ -7,6 +7,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 
 fn main() {
     let tracing_subscriber = tracing_subscriber::FmtSubscriber::builder()
@@ -31,6 +32,10 @@ fn main() {
     let day04_input = include_str!("day04/input.txt");
     day04::solve_part1(day04_input);
     day04::solve_part2(day04_input);
+
+    let day05_input = include_str!("day05/input.txt");
+    day05::solve_part1(day05_input);
+    day05::solve_part2(day05_input);
 
     info!("See you tomorrow!");
 }
