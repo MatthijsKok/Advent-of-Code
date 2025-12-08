@@ -26,16 +26,9 @@ pub fn solve_part2_alt(input: &str) -> usize {
 /// some sequence of digits repeated _any_ number of times.
 fn is_silly_id_part2_alt(id: usize) -> bool {
     let s = id.to_string();
-    for i in 1..=s.len() / 2 {
-        if !s.len().is_multiple_of(i) {
-            // string has to be exactly divisible by `i`
-            continue;
-        }
-        if s.as_bytes().chunks_exact(i).collect::<HashSet<_>>().len() == 1 {
-            return true;
-        }
-    }
-    false
+    (1..=s.len() / 2).any(|i| {
+        s.len().is_multiple_of(i) && s.as_bytes().chunks_exact(i).collect::<HashSet<_>>().len() == 1
+    })
 }
 
 #[tracing::instrument(skip_all, ret)]
@@ -55,19 +48,13 @@ pub fn solve_part2(input: &str) -> usize {
 /// some sequence of digits repeated _any_ number of times.
 fn is_silly_id_part2(id: usize) -> bool {
     let s = id.to_string();
-    for i in 1..=s.len() / 2 {
-        if !s.len().is_multiple_of(i) {
-            // string has to be exactly divisible by `i`
-            continue;
+    (1..=s.len() / 2).any(|i| {
+        s.len().is_multiple_of(i) && {
+            let mut chunks = s.as_bytes().chunks_exact(i);
+            let first_chunk = chunks.next().unwrap();
+            chunks.all(|c| c == first_chunk)
         }
-        // split string into chunks of size `i`
-        let mut chunks = s.as_bytes().chunks_exact(i);
-        let first_chunk = chunks.next().unwrap();
-        if chunks.all(|c| c == first_chunk) {
-            return true;
-        }
-    }
-    false
+    })
 }
 
 #[tracing::instrument(skip_all, ret)]
