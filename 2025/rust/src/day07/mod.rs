@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 enum GridCell {
     Start,
@@ -32,22 +30,27 @@ pub fn solve_part1(input: &str) -> usize {
         })
         .collect::<Vec<_>>();
 
+    let width = manifold_grid[0].len();
     let start_col = manifold_grid[0]
         .iter()
         .position(|cell| cell == &GridCell::Start)
         .unwrap();
-    let mut active_beams: HashSet<usize> = HashSet::with_capacity(128);
-    active_beams.insert(start_col);
+
+    let mut active_beams: Vec<bool> = vec![false; width];
+    active_beams[start_col] = true;
 
     for row in manifold_grid {
-        let mut new_beams: HashSet<usize> = HashSet::new();
-        for &col in &active_beams {
+        let mut new_beams: Vec<bool> = vec![false; width];
+        for col in 0..width {
+            if !active_beams[col] {
+                continue;
+            }
             if row[col] == GridCell::Splitter {
                 split_count += 1;
-                new_beams.insert(col - 1);
-                new_beams.insert(col + 1);
+                new_beams[col - 1] = true;
+                new_beams[col + 1] = true;
             } else {
-                new_beams.insert(col);
+                new_beams[col] = true;
             }
         }
         active_beams = new_beams;
