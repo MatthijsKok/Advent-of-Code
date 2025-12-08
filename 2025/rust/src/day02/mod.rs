@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use rayon::prelude::*;
 
 fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
@@ -5,6 +7,35 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
         .map(|(a, b)| (a.parse::<usize>().unwrap(), b.parse::<usize>().unwrap()))
         .map(|(a, b)| a..=b)
         .unwrap()
+}
+
+#[tracing::instrument(skip_all, ret)]
+pub fn solve_part2_alt(input: &str) -> usize {
+    // Answer = 15704845910
+    input
+        .lines()
+        .next()
+        .unwrap()
+        .par_split(',')
+        .flat_map(range_from_string)
+        .filter(|&id| is_silly_id_part2_alt(id))
+        .sum()
+}
+
+/// An ID is a silly ID if it is made of _only_
+/// some sequence of digits repeated _any_ number of times.
+fn is_silly_id_part2_alt(id: usize) -> bool {
+    let s = id.to_string();
+    for i in 1..=s.len() / 2 {
+        if !s.len().is_multiple_of(i) {
+            // string has to be exactly divisible by `i`
+            continue;
+        }
+        if s.as_bytes().chunks_exact(i).collect::<HashSet<_>>().len() == 1 {
+            return true;
+        }
+    }
+    false
 }
 
 #[tracing::instrument(skip_all, ret)]

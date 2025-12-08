@@ -32,6 +32,7 @@ fn main() {
     let input = include_str!("day02/input.txt");
     day02::solve_part1(input);
     day02::solve_part2(input);
+    day02::solve_part2_alt(input);
 
     // let input = include_str!("day03/input.txt");
     // day03::solve_part1(input);
