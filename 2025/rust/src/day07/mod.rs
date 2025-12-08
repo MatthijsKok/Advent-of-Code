@@ -59,11 +59,38 @@ pub fn solve_part1(input: &str) -> usize {
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = ?
-    let width = input.lines().next().unwrap().len();
-    let height = input.lines().count();
-    assert_eq!(width, 141);
-    assert_eq!(height, 142);
-    0
+    let mut split_count: usize = 0;
+    let manifold_grid = input
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|c| GridCell::try_from(c).unwrap())
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+
+    let start_col = manifold_grid[0]
+        .iter()
+        .position(|cell| cell == &GridCell::Start)
+        .unwrap();
+    let mut active_beams: Vec<usize> = Vec::with_capacity(256);
+    active_beams.push(start_col);
+
+    for row in &manifold_grid {
+        let mut new_beams: Vec<usize> = Vec::with_capacity(256);
+        for &col in &active_beams {
+            if row[col] == GridCell::Splitter {
+                split_count += 1;
+                new_beams.push(col - 1);
+                new_beams.push(col + 1);
+            } else {
+                new_beams.push(col);
+            }
+        }
+        active_beams = new_beams;
+    }
+
+    split_count
 }
 
 #[test]
