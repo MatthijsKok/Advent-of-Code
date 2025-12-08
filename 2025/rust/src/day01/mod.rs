@@ -1,3 +1,6 @@
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_wrap)]
+
 const DIAL_SIZE: u8 = 100;
 
 enum DialStep {
@@ -5,14 +8,15 @@ enum DialStep {
     Right(u16),
 }
 
-impl From<&str> for DialStep {
-    fn from(value: &str) -> Self {
+impl TryFrom<&str> for DialStep {
+    type Error = ();
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         let (direction, amount) = value.split_at(1);
         let clicks: u16 = amount.parse().expect("dial step amount not a u16");
         match direction {
-            "L" => Self::Left(clicks),
-            "R" => Self::Right(clicks),
-            _ => panic!("dial direction is not L or R"),
+            "L" => Ok(Self::Left(clicks)),
+            "R" => Ok(Self::Right(clicks)),
+            _ => Err(()),
         }
     }
 }
@@ -20,21 +24,8 @@ impl From<&str> for DialStep {
 struct DialerOne(pub i16);
 
 impl DialerOne {
-    pub fn new() -> Self {
-        DialerOne(50)
-    }
-
-    pub fn dial(&mut self, step: DialStep) {
-        let step_amount: i16 = match step {
-            DialStep::Left(amount) => amount as i16,
-            DialStep::Right(amount) => amount as i16,
-        } % 100;
-        self.0 += 100;
-        match step {
-            DialStep::Left(_) => self.0 -= step_amount,
-            DialStep::Right(_) => self.0 += step_amount,
-        };
-        self.0 %= 100;
+    pub const fn new() -> Self {
+        Self(50)
     }
 
     #[inline]
@@ -43,9 +34,9 @@ impl DialerOne {
         let mut amount: i16 = 0;
         let is_right = line[0] == b'R';
         for &b in &line[1..] {
-            amount = amount * 10 + (b - b'0') as i16;
+            amount = amount * 10 + i16::from(b - b'0');
         }
-        let step = amount * (2 * is_right as i16 - 1);
+        let step = amount * (2 * i16::from(is_right) - 1);
         self.0 = (self.0 + step).rem_euclid(100);
         u16::from(self.0 == 0)
     }
@@ -66,21 +57,21 @@ pub fn solve_part1(input: &str) -> u16 {
 struct DialerTwo(pub i16);
 
 impl DialerTwo {
-    pub fn new() -> Self {
-        DialerTwo(50)
+    pub const fn new() -> Self {
+        Self(50)
     }
 
-    pub fn dial(&mut self, step: DialStep) -> u16 {
+    pub fn dial(&mut self, step: &DialStep) -> u16 {
         match step {
             DialStep::Left(amount) => {
                 let dist: u16 = if self.0 == 0 { 100 } else { self.0 as u16 };
                 let zeros = (amount + 100 - dist) / 100;
-                self.0 = (self.0 - amount as i16).rem_euclid(DIAL_SIZE.into());
+                self.0 = (self.0 - *amount as i16).rem_euclid(DIAL_SIZE.into());
                 zeros
             }
             DialStep::Right(amount) => {
                 let zeros = (self.0 as u16 + amount) / u16::from(DIAL_SIZE);
-                self.0 = (self.0 + amount as i16) % i16::from(DIAL_SIZE);
+                self.0 = (self.0 + *amount as i16) % i16::from(DIAL_SIZE);
                 zeros
             }
         }
@@ -91,5 +82,8 @@ impl DialerTwo {
 pub fn solve_part2(input: &str) -> u16 {
     // Answer = 6228
     let mut dialer = DialerTwo::new();
-    input.lines().map(|line| dialer.dial(line.into())).sum()
+    input
+        .lines()
+        .map(|line| dialer.dial(&line.try_into().unwrap()))
+        .sum()
 }

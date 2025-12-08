@@ -1,11 +1,11 @@
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = ?
     0
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = ?
     0
 }

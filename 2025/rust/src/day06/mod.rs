@@ -1,7 +1,7 @@
 use std::array;
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = 5977759036837
     let input_width = input
         .lines()
@@ -35,7 +35,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = 9630000828442
     let input_width = input.lines().next().unwrap().len();
     let input_height = input.lines().count();
@@ -62,7 +62,7 @@ pub(crate) fn solve_part2(input: &str) -> usize {
                 .unwrap();
             let numbers = chunk.iter().map(|line| {
                 line.chars()
-                    .filter(|char| char.is_ascii_digit())
+                    .filter(char::is_ascii_digit)
                     .collect::<String>()
                     .parse::<usize>()
                     .unwrap()

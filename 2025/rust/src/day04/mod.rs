@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use rayon::prelude::*;
 
@@ -15,7 +15,7 @@ fn neighbours(i: usize, j: usize, upper_bound: usize) -> impl Iterator<Item = (u
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = 1474
     let dim_size = input.lines().next().unwrap().len();
 
@@ -25,7 +25,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .flat_map(|(i, line)| {
             line.bytes()
                 .enumerate()
-                .map(|(j, val)| ((i, j), (val == b'@') as u8))
+                .map(|(j, val)| ((i, j), u8::from(val == b'@')))
                 .collect::<Vec<_>>()
         })
         .collect::<BTreeMap<_, _>>();
@@ -43,7 +43,7 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = 8910
     let mut count: usize = 0;
     let dim_size = input.lines().next().unwrap().len();
@@ -54,7 +54,7 @@ pub(crate) fn solve_part2(input: &str) -> usize {
         .flat_map(|(i, line)| {
             line.bytes()
                 .enumerate()
-                .map(|(j, val)| ((i, j), (val == b'@') as u8))
+                .map(|(j, val)| ((i, j), u8::from(val == b'@')))
                 .collect::<Vec<_>>()
         })
         .collect::<BTreeMap<_, _>>();

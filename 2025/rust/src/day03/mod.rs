@@ -28,19 +28,19 @@ fn bank_find_max(bank: &[u8], count: usize) -> usize {
 fn solve(input: &str, battery_size: usize) -> usize {
     input
         .par_lines()
-        .map(|bank| bank.as_bytes())
+        .map(str::as_bytes)
         .map(|digits| bank_find_max(digits, battery_size))
         .sum()
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = 17330
     solve(input, 2)
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = 171518260283767
     solve(input, 12)
 }

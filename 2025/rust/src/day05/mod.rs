@@ -1,13 +1,11 @@
-use std::{cmp::PartialOrd, ops::RangeInclusive};
-
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::ops::RangeInclusive;
 
 fn merge_all_ranges(mut ranges: Vec<RangeInclusive<usize>>) -> Vec<RangeInclusive<usize>> {
     ranges.sort_by_key(|range| *range.start());
     ranges.into_iter().fold(Vec::new(), |mut merged, range| {
         match merged.last_mut() {
             Some(last) if *last.end() + 1 >= *range.start() => {
-                *last = *last.start()..=(*last.end().max(range.end()))
+                *last = *last.start()..=(*last.end().max(range.end()));
             }
             _ => merged.push(range),
         }
@@ -16,7 +14,7 @@ fn merge_all_ranges(mut ranges: Vec<RangeInclusive<usize>>) -> Vec<RangeInclusiv
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = 739
     let mut ranges: Vec<RangeInclusive<usize>> = Vec::new();
     let mut ingredients: Vec<usize> = Vec::new();
@@ -29,22 +27,12 @@ pub(crate) fn solve_part1(input: &str) -> usize {
                 .map(|(lb, ub)| (lb.parse::<usize>().unwrap(), ub.parse::<usize>().unwrap()))
                 .map(|(lb, ub)| lb..=ub)
                 .unwrap(),
-        )
+        );
     }
     for line in lines {
-        ingredients.push(line.parse().unwrap())
+        ingredients.push(line.parse().unwrap());
     }
-
-    // println!("amount of ranges before merge: {}", ranges.len());
-    // 182
-    // dbg!(&ranges);
-
     let ranges = merge_all_ranges(ranges);
-
-    // println!("amount of ranges after  merge: {}", ranges.len());
-    // 78
-    // dbg!(&ranges);
-
     ingredients
         .iter()
         .filter(|&ingredient| ranges.iter().any(|r| r.contains(ingredient)))
@@ -52,9 +40,9 @@ pub(crate) fn solve_part1(input: &str) -> usize {
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = 344486348901788
-    let mut ranges = input
+    let ranges = input
         .lines()
         .take_while(|line| !line.is_empty())
         .map(|line| {
