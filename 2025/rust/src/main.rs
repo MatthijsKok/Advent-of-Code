@@ -1,4 +1,5 @@
-// #![allow(unused)]
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
 
 use tracing::info;
 use tracing_subscriber::fmt::format::FmtSpan;
