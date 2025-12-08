@@ -10,8 +10,8 @@ use tracing_subscriber::fmt::format::FmtSpan;
 // mod day04;
 // mod day05;
 // mod day06;
-mod day07;
-// mod day08;
+// mod day07;
+mod day08;
 // mod day09;
 // mod day10;
 // mod day11;
@@ -49,13 +49,13 @@ fn main() {
     // day06::solve_part1(input);
     // day06::solve_part2(input);
 
-    let input = include_str!("day07/input.txt");
-    day07::solve_part1(input);
-    day07::solve_part2(input);
+    // let input = include_str!("day07/input.txt");
+    // day07::solve_part1(input);
+    // day07::solve_part2(input);
 
-    // let input = include_str!("day08/input.txt");
-    // day08::solve_part1(input);
-    // day08::solve_part2(input);
+    let input = include_str!("day08/input.txt");
+    day08::solve_part1(input);
+    day08::solve_part2(input);
 
     // let input = include_str!("day09/input.txt");
     // day09::solve_part1(input);
