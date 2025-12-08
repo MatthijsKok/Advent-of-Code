@@ -58,8 +58,7 @@ pub fn solve_part1(input: &str) -> usize {
 
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
-    // Answer = ?
-    let mut split_count: usize = 0;
+    // Answer = 187987920774390
     let manifold_grid = input
         .lines()
         .map(|line| {
@@ -69,28 +68,32 @@ pub fn solve_part2(input: &str) -> usize {
         })
         .collect::<Vec<_>>();
 
+    let width = manifold_grid[0].len();
     let start_col = manifold_grid[0]
         .iter()
         .position(|cell| cell == &GridCell::Start)
         .unwrap();
-    let mut active_beams: Vec<usize> = Vec::with_capacity(256);
-    active_beams.push(start_col);
+
+    let mut timelines: Vec<usize> = vec![0; width];
+    timelines[start_col] = 1;
 
     for row in &manifold_grid {
-        let mut new_beams: Vec<usize> = Vec::with_capacity(256);
-        for &col in &active_beams {
+        let mut new_timelines: Vec<usize> = vec![0; width];
+        for (col, &count) in timelines.iter().enumerate() {
+            if count == 0 {
+                continue;
+            }
             if row[col] == GridCell::Splitter {
-                split_count += 1;
-                new_beams.push(col - 1);
-                new_beams.push(col + 1);
+                new_timelines[col - 1] += count;
+                new_timelines[col + 1] += count;
             } else {
-                new_beams.push(col);
+                new_timelines[col] += count;
             }
         }
-        active_beams = new_beams;
+        timelines = new_timelines;
     }
 
-    split_count
+    timelines.iter().sum()
 }
 
 #[test]
