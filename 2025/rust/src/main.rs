@@ -5,12 +5,12 @@ use tracing::info;
 use tracing_subscriber::fmt::format::FmtSpan;
 
 // mod day01;
-// mod day02;
+mod day02;
 // mod day03;
 // mod day04;
 // mod day05;
 // mod day06;
-mod day07;
+// mod day07;
 // mod day08;
 // mod day09;
 // mod day10;
@@ -29,9 +29,9 @@ fn main() {
     // day01::solve_part1(input);
     // day01::solve_part2(input);
 
-    // let input = include_str!("day02/input.txt");
-    // day02::solve_part1(input);
-    // day02::solve_part2(input);
+    let input = include_str!("day02/input.txt");
+    day02::solve_part1(input);
+    day02::solve_part2(input);
 
     // let input = include_str!("day03/input.txt");
     // day03::solve_part1(input);
@@ -49,9 +49,9 @@ fn main() {
     // day06::solve_part1(input);
     // day06::solve_part2(input);
 
-    let input = include_str!("day07/input.txt");
-    day07::solve_part1(input);
-    day07::solve_part2(input);
+    // let input = include_str!("day07/input.txt");
+    // day07::solve_part1(input);
+    // day07::solve_part2(input);
 
     // let input = include_str!("day08/input.txt");
     // day08::solve_part1(input);

@@ -8,7 +8,7 @@ fn range_from_string(s: &str) -> std::ops::RangeInclusive<usize> {
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part2(input: &str) -> usize {
+pub fn solve_part2(input: &str) -> usize {
     // Answer = 15704845910
     input
         .lines()
@@ -16,31 +16,31 @@ pub(crate) fn solve_part2(input: &str) -> usize {
         .unwrap()
         .par_split(',')
         .flat_map(range_from_string)
-        .filter(is_silly_id_part2)
+        .filter(|&id| is_silly_id_part2(id))
         .sum()
 }
 
 /// An ID is a silly ID if it is made of _only_
 /// some sequence of digits repeated _any_ number of times.
-fn is_silly_id_part2(id: &usize) -> bool {
+fn is_silly_id_part2(id: usize) -> bool {
     let s = id.to_string();
     for i in 1..=s.len() / 2 {
         if !s.len().is_multiple_of(i) {
             // string has to be exactly divisible by `i`
             continue;
-        };
+        }
         // split string into chunks of size `i`
         let mut chunks = s.as_bytes().chunks_exact(i);
         let first_chunk = chunks.next().unwrap();
         if chunks.all(|c| c == first_chunk) {
             return true;
-        };
+        }
     }
     false
 }
 
 #[tracing::instrument(skip_all, ret)]
-pub(crate) fn solve_part1(input: &str) -> usize {
+pub fn solve_part1(input: &str) -> usize {
     // Answer = 5398419778
     input
         .lines()
@@ -49,13 +49,13 @@ pub(crate) fn solve_part1(input: &str) -> usize {
         .par_split(',')
         .filter(|s| s.len() % 4 != 3)
         .flat_map(range_from_string)
-        .filter(is_silly_id_part1)
+        .filter(|&id| is_silly_id_part1(id))
         .sum()
 }
 
 /// An ID is a silly ID if it is made of _only_
 /// some sequence of digits repeated twice.
-fn is_silly_id_part1(id: &usize) -> bool {
+fn is_silly_id_part1(id: usize) -> bool {
     let s = id.to_string();
     if !s.len().is_multiple_of(2) {
         return false;
@@ -66,11 +66,11 @@ fn is_silly_id_part1(id: &usize) -> bool {
 
 #[test]
 fn silly_ids_part1() {
-    assert!(!is_silly_id_part1(&1));
-    assert!(!is_silly_id_part1(&111));
-    assert!(is_silly_id_part1(&1212));
-    assert!(is_silly_id_part1(&11));
-    assert!(!is_silly_id_part1(&12312));
+    assert!(!is_silly_id_part1(1));
+    assert!(!is_silly_id_part1(111));
+    assert!(is_silly_id_part1(1212));
+    assert!(is_silly_id_part1(11));
+    assert!(!is_silly_id_part1(12312));
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn examples_given_part1() {
         ]
         .into_iter()
         .flat_map(range_from_string)
-        .filter(is_silly_id_part1)
+        .filter(|&id| is_silly_id_part1(id))
         .sum::<usize>(),
         1227775554usize
     );
@@ -96,78 +96,78 @@ fn examples_given_part1() {
 
 #[test]
 fn silly_ids_part2() {
-    assert!(!is_silly_id_part2(&1));
-    assert!(is_silly_id_part2(&111));
-    assert!(is_silly_id_part2(&1212));
-    assert!(is_silly_id_part2(&11));
-    assert!(!is_silly_id_part2(&12312));
+    assert!(!is_silly_id_part2(1));
+    assert!(is_silly_id_part2(111));
+    assert!(is_silly_id_part2(1212));
+    assert!(is_silly_id_part2(11));
+    assert!(!is_silly_id_part2(12312));
 }
 
 #[test]
 fn examples_given_part2() {
     assert_eq!(
         range_from_string("11-22")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [11, 22]
     );
     assert_eq!(
         range_from_string("95-115")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [99, 111]
     );
     assert_eq!(
         range_from_string("998-1012")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [999, 1010]
     );
     assert_eq!(
         range_from_string("1188511880-1188511890")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [1188511885]
     );
     assert_eq!(
         range_from_string("222220-222224")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [222222]
     );
     assert_eq!(
         range_from_string("1698522-1698528")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         []
     );
     assert_eq!(
         range_from_string("446443-446449")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [446446]
     );
     assert_eq!(
         range_from_string("38593856-38593862")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [38593859]
     );
     assert_eq!(
         range_from_string("565653-565659")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [565656]
     );
     assert_eq!(
         range_from_string("824824821-824824827")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [824824824]
     );
     assert_eq!(
         range_from_string("2121212118-2121212124")
-            .filter(is_silly_id_part2)
+            .filter(|&id| is_silly_id_part2(id))
             .collect::<Vec<_>>(),
         [2121212121]
     );
@@ -191,7 +191,7 @@ fn examples_given_part2_total() {
         ]
         .into_iter()
         .flat_map(range_from_string)
-        .filter(is_silly_id_part2)
+        .filter(|&id| is_silly_id_part2(id))
         .sum::<usize>(),
         4174379265usize
     );
