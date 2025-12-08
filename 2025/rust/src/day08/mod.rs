@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+use rayon::prelude::*;
+
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 struct Point {
     pub x: u32,
@@ -52,30 +54,33 @@ impl UnionFind {
         self.parent[x]
     }
 
-    fn union(&mut self, x: usize, y: usize) -> bool {
+    fn union(&mut self, x: usize, y: usize) -> Option<usize> {
         let root_x = self.find(x);
         let root_y = self.find(y);
 
         if root_x == root_y {
-            return false;
+            return None;
         }
 
-        match self.rank[root_x].cmp(&self.rank[root_y]) {
+        let new_root = match self.rank[root_x].cmp(&self.rank[root_y]) {
             Ordering::Less => {
                 self.parent[root_x] = root_y;
                 self.size[root_y] += self.size[root_x];
+                root_y
             }
             Ordering::Greater => {
                 self.parent[root_y] = root_x;
                 self.size[root_x] += self.size[root_y];
+                root_x
             }
             Ordering::Equal => {
                 self.parent[root_y] = root_x;
                 self.size[root_x] += self.size[root_y];
                 self.rank[root_x] += 1;
+                root_x
             }
-        }
-        true
+        };
+        Some(self.size[new_root])
     }
 }
 
@@ -117,13 +122,30 @@ pub fn solve_part1(input: &str) -> usize {
 
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
-    // Answer = ?
-    0
+    // Answer = 9069509600
+    let points: Vec<Point> = input
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| Point::try_from(line).unwrap())
+        .collect();
+    let mut edges = all_pairs(&points).collect::<Vec<_>>();
+    edges.sort_unstable(); // unstable = faaast
+
+    let mut uf = UnionFind::new(points.len());
+    let mut last_pair = (0, 0);
+    for &(_, i, j) in &edges {
+        if let Some(size) = uf.union(i, j) {
+            last_pair = (i, j);
+            if size == points.len() {
+                break;
+            }
+        }
+    }
+    points[last_pair.0].x as usize * points[last_pair.1].x as usize
 }
 
-#[test]
-fn part1_examples() {
-    const EXAMPLE: &str = "\
+#[cfg(test)]
+const EXAMPLE: &str = "\
 162,817,812
 57,618,57
 906,360,560
@@ -144,8 +166,13 @@ fn part1_examples() {
 862,61,35
 984,92,344
 425,690,689";
+
+#[test]
+fn part1_examples() {
     assert_eq!(solve(EXAMPLE, 10), 40);
 }
 
 #[test]
-fn part2_examples() {}
+fn part2_examples() {
+    assert_eq!(solve_part2(EXAMPLE), 25272);
+}
