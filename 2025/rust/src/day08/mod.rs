@@ -74,12 +74,6 @@ impl UnionFind {
     }
 }
 
-/// has to be a separate function otherways rust starts crying about re-borrowing mo
-fn all_pairs(points: &[Point]) -> impl Iterator<Item = (u64, usize, usize)> {
-    let n = points.len();
-    (0..n).flat_map(move |i| (i + 1..n).map(move |j| (points[i].dist_squared(&points[j]), i, j)))
-}
-
 /// separate for the test
 fn solve(input: &str, num_connections: usize) -> usize {
     let points: Vec<Point> = input
@@ -88,7 +82,10 @@ fn solve(input: &str, num_connections: usize) -> usize {
         .collect();
     let n = points.len();
 
-    let mut edges = all_pairs(&points).collect::<Vec<_>>();
+    let mut edges = (0..n)
+        .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
+        .map(|(i, j)| (points[i].dist_squared(&points[j]), i, j))
+        .collect::<Vec<_>>();
     edges.sort_unstable(); // unstable = faaast
 
     let mut uf = UnionFind::new(n);
@@ -118,7 +115,10 @@ pub fn solve_part2(input: &str) -> usize {
         .map(|line| Point::try_from(line).unwrap())
         .collect();
     let n = points.len();
-    let mut edges = all_pairs(&points).collect::<Vec<_>>();
+    let mut edges = (0..n)
+        .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
+        .map(|(i, j)| (points[i].dist_squared(&points[j]), i, j))
+        .collect::<Vec<_>>();
     edges.sort_unstable(); // unstable = faaast
 
     let mut uf = UnionFind::new(n);
