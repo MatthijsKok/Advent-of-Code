@@ -33,32 +33,41 @@ pub fn solve_part2(input: &str) -> usize {
     let n = points.len();
 
     // connect all the points (WRAPPING) to their neighbours
-    let mut edges = (0..n)
+    // partition edges into horizontal and vertical, to save this check inside the hot loop
+    let (edges_horizontal, edges_vertical): (Vec<_>, Vec<_>) = (0..n)
         .map(|i| (points[i], points[(i + 1) % n]))
+        .partition(|&((_, y1), (_, y2))| y1 == y2);
+
+    let mut edges_horizontal_mapped = edges_horizontal
+        .into_iter()
+        .map(|((x1, y1), (x2, _))| (y1, x1.min(x2), x1.max(x2)))
         .collect::<Vec<_>>();
-    edges.sort_unstable();
+    edges_horizontal_mapped.sort_unstable_by_key(|&(y, _, _)| y);
+    let mut edges_vertical_mapped = edges_vertical
+        .into_iter()
+        .map(|((x1, y1), (_, y2))| (x1, y1.min(y2), y1.max(y2)))
+        .collect::<Vec<_>>();
+    edges_vertical_mapped.sort_unstable_by_key(|&(x, _, _)| x);
 
     let mut max_area = 0;
 
     for i in 0..n {
-        let (x1, y1) = points[i];
         for j in (i + 1)..n {
+            let (x1, y1) = points[i];
             let (x2, y2) = points[j];
             let (min_x, max_x) = (x1.min(x2), x1.max(x2));
             let (min_y, max_y) = (y1.min(y2), y1.max(y2));
             let area = (x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize;
-            // skip expensive comparison with all edges if the area is smaller anyway
-            if area < max_area {
-                continue;
-            }
 
-            if edges.iter().all(|&((ex1, ey1), (ex2, ey2))| {
-                if ey1 == ey2 {
-                    ey1 <= min_y || ey1 >= max_y || ex1.min(ex2) >= max_x || ex1.max(ex2) <= min_x
-                } else {
-                    ex1 <= min_x || ex1 >= max_x || ey1.min(ey2) >= max_y || ey1.max(ey2) <= min_y
-                }
-            }) {
+            // skip expensive comparison with all edges if the area is smaller anyway
+            if area > max_area
+                && edges_horizontal_mapped.iter().all(|&(ey, ex_min, ex_max)| {
+                    ey <= min_y || ey >= max_y || ex_min >= max_x || ex_max <= min_x
+                })
+                && edges_vertical_mapped.iter().all(|&(ex, ey_min, ey_max)| {
+                    ex <= min_x || ex >= max_x || ey_min >= max_y || ey_max <= min_y
+                })
+            {
                 max_area = area;
             }
         }
