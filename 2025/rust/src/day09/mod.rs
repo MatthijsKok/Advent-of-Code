@@ -33,9 +33,10 @@ pub fn solve_part2(input: &str) -> usize {
     let n = points.len();
 
     // connect all the points (WRAPPING) to their neighbours
-    let edges = (0..n)
+    let mut edges = (0..n)
         .map(|i| (points[i], points[(i + 1) % n]))
         .collect::<Vec<_>>();
+    edges.sort_unstable();
 
     (0..n)
         .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
