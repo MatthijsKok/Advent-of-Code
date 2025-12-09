@@ -1,4 +1,5 @@
 rustflags = ["-Ctarget-cpu=native"]
 
 [alias]
+cl = "clippy"
 rr = "run --release"

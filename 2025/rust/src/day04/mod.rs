@@ -59,21 +59,21 @@ pub fn solve_part2(input: &str) -> usize {
         .collect::<HashSet<_>>();
 
     loop {
-        let cloned_lookup = lookup.clone();
-        let new_removals = cloned_lookup
+        let new_removals = lookup
             .par_iter()
-            .filter(|&&(i, j)| {
+            .copied()
+            .filter(|&(i, j)| {
                 let n = neighbours(i, j, dim_size)
-                    .filter(|coord| cloned_lookup.contains(coord))
+                    .filter(|coord| lookup.contains(coord))
                     .count();
-                n < 5
+                n < NEIGHBOUR_THRESHOLD as usize
             })
             .collect::<Vec<_>>();
         if new_removals.is_empty() {
             break;
         }
         count += new_removals.len();
-        for coord in new_removals {
+        for coord in &new_removals {
             lookup.remove(coord);
         }
     }
