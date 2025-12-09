@@ -38,32 +38,32 @@ pub fn solve_part2(input: &str) -> usize {
         .collect::<Vec<_>>();
     edges.sort_unstable();
 
-    (0..n)
-        .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
-        .filter_map(|(i, j)| {
-            let (x1, y1) = points[i];
+    let mut max_area = 0;
+
+    for i in 0..n {
+        let (x1, y1) = points[i];
+        for j in (i + 1)..n {
             let (x2, y2) = points[j];
             let (min_x, max_x) = (x1.min(x2), x1.max(x2));
             let (min_y, max_y) = (y1.min(y2), y1.max(y2));
-            edges
-                .iter()
-                .all(|&((ex1, ey1), (ex2, ey2))| {
-                    if ey1 == ey2 {
-                        ey1 <= min_y
-                            || ey1 >= max_y
-                            || ex1.min(ex2) >= max_x
-                            || ex1.max(ex2) <= min_x
-                    } else {
-                        ex1 <= min_x
-                            || ex1 >= max_x
-                            || ey1.min(ey2) >= max_y
-                            || ey1.max(ey2) <= min_y
-                    }
-                })
-                .then(|| (x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize)
-        })
-        .max()
-        .unwrap()
+            let area = (x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize;
+            // skip expensive comparison with all edges if the area is smaller anyway
+            if area < max_area {
+                continue;
+            }
+
+            if edges.iter().all(|&((ex1, ey1), (ex2, ey2))| {
+                if ey1 == ey2 {
+                    ey1 <= min_y || ey1 >= max_y || ex1.min(ex2) >= max_x || ex1.max(ex2) <= min_x
+                } else {
+                    ex1 <= min_x || ex1 >= max_x || ey1.min(ey2) >= max_y || ey1.max(ey2) <= min_y
+                }
+            }) {
+                max_area = area;
+            }
+        }
+    }
+    max_area
 }
 
 #[cfg(test)]
