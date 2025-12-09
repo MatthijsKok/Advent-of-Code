@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use rayon::prelude::*;
 
@@ -54,30 +54,27 @@ pub fn solve_part2(input: &str) -> usize {
         .flat_map(|(i, line)| {
             line.bytes()
                 .enumerate()
-                .map(|(j, val)| ((i, j), u8::from(val == b'@')))
-                .collect::<Vec<_>>()
+                .filter_map(move |(j, val)| (val == b'@').then_some((i, j)))
         })
-        .collect::<BTreeMap<_, _>>();
+        .collect::<HashSet<_>>();
 
     loop {
         let cloned_lookup = lookup.clone();
         let new_removals = cloned_lookup
             .par_iter()
-            .filter(|&(_, &v)| v != 0)
-            .filter(|&(&(i, j), _)| {
+            .filter(|&&(i, j)| {
                 let n = neighbours(i, j, dim_size)
-                    .filter_map(|coord| cloned_lookup.get(&coord))
-                    .sum::<u8>();
-                n < NEIGHBOUR_THRESHOLD
+                    .filter(|coord| cloned_lookup.contains(coord))
+                    .count();
+                n < 5
             })
-            .map(|(&coord, _)| coord)
             .collect::<Vec<_>>();
         if new_removals.is_empty() {
             break;
         }
+        count += new_removals.len();
         for coord in new_removals {
-            lookup.entry(coord).and_modify(|v| *v = 0);
-            count += 1;
+            lookup.remove(coord);
         }
     }
 
