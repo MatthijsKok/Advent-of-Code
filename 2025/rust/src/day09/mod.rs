@@ -46,31 +46,44 @@ pub fn solve_part2(input: &str) -> usize {
                     .iter()
                     .all(|&(px, py)| px <= min_x || px >= max_x || py <= min_y || py >= max_y)
                     .then(|| (x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize)
-
-                // points
-                //     .iter()
-                //     .any(|&(px, py)| {
-                //         px > x1.min(x2) && px < x1.max(x2) && py > y1.min(y2) && py < y1.max(y2)
-                //     })
-                //     .not()
-                //     .then(|| (x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize)
-
-                // let has_point_inside = points.iter().any(|&(px, py)| {
-                //     px > x1.min(x2) && px < x1.max(x2) && py > y1.min(y2) && py < y1.max(y2)
-                // });
-                // if has_point_inside {
-                //     None
-                // } else {
-                //     Some((x1.abs_diff(x2) + 1) as usize * (y1.abs_diff(y2) + 1) as usize)
-                // }
+                    .inspect(|size| {
+                        println!("({x1:2},{y1:2}) x ({x2:2},{y2:2}) = {}", size);
+                    })
             })
         })
         .max()
         .unwrap()
 }
 
-#[test]
-fn part1_examples() {}
+#[cfg(test)]
+/// ```
+///  01234567890123
+/// 0..............
+/// 1.......#...#..
+/// 2..............
+/// 3..#....#......
+/// 4..............
+/// 5..#......#....
+/// 6..............
+/// 7.........#.#..
+/// 8..............
+/// ```
+const EXAMPLE: &str = "\
+7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3";
 
 #[test]
-fn part2_examples() {}
+fn part1_examples() {
+    assert_eq!(solve_part1(EXAMPLE), 50);
+}
+
+#[test]
+fn part2_examples() {
+    assert_eq!(solve_part2(EXAMPLE), 24);
+}
