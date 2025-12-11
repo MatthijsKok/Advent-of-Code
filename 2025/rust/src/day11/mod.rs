@@ -47,6 +47,7 @@ pub fn solve_part1(input: &str) -> usize {
 
 fn count_paths_with_dac_fft(
     graph: &HashMap<Node, Vec<Node>>,
+    cache: &mut HashMap<(Node, bool, bool), usize>,
     current: Node,
     end: Node,
     seen_dac: bool,
@@ -55,28 +56,35 @@ fn count_paths_with_dac_fft(
     if current == end {
         return usize::from(seen_dac && seen_fft);
     }
-
-    graph
+    let cache_key = (current, seen_dac, seen_fft);
+    if let Some(&cached_total) = cache.get(&cache_key) {
+        return cached_total;
+    }
+    let total = graph
         .get(&current)
         .unwrap()
         .iter()
         .map(|&neighbour| {
             count_paths_with_dac_fft(
                 graph,
+                cache,
                 neighbour,
                 end,
                 seen_dac || current == DAC,
                 seen_fft || current == FFT,
             )
         })
-        .sum()
+        .sum();
+    cache.insert(cache_key, total);
+    total
 }
 
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
-    // Answer = ?
+    // Answer = 506264456238938
     let graph = parse_graph(input);
-    count_paths_with_dac_fft(&graph, SVR, OUT, false, false)
+    let mut cache: HashMap<(Node, bool, bool), usize> = HashMap::new();
+    count_paths_with_dac_fft(&graph, &mut cache, SVR, OUT, false, false)
 }
 
 #[cfg(test)]
