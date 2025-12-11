@@ -85,6 +85,12 @@ pub fn solve_part2(input: &str) -> usize {
     let graph = parse_graph(input);
     let mut cache: HashMap<(Node, bool, bool), usize> = HashMap::new();
     count_paths_with_dac_fft(&graph, &mut cache, SVR, OUT, false, false)
+    // TODO: can split problem into 3 times part1, but then there are paths that can "go past" your target node
+    // FIXME: validate assumption that FFT -> DAC and not other way around
+    // let p1 = count_paths(&graph, SVR, FFT);
+    // let p2 = count_paths(&graph, FFT, DAC);
+    // let p3 = count_paths(&graph, DAC, OUT);
+    // p1 * p2 * p3
 }
 
 #[cfg(test)]
