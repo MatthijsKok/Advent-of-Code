@@ -26,34 +26,15 @@ fn parse_graph(input: &str) -> HashMap<Node, Vec<Node>> {
         .collect()
 }
 
-fn count_paths(graph: &HashMap<Node, Vec<Node>>, current: Node, end: Node) -> usize {
-    if current == end {
-        return 1;
-    }
-    graph
-        .get(&current)
-        .unwrap()
-        .iter()
-        .map(|&neighbour| count_paths(graph, neighbour, end))
-        .sum()
-}
-
-#[tracing::instrument(skip_all, ret)]
-pub fn solve_part1(input: &str) -> usize {
-    // Answer = 607
-    let graph = parse_graph(input);
-    count_paths(&graph, YOU, OUT)
-}
-
-fn count_paths_with_dac_fft(
+fn count_paths(
     graph: &HashMap<Node, Vec<Node>>,
     cache: &mut HashMap<(Node, bool, bool), usize>,
     current: Node,
-    end: Node,
+    target: Node,
     seen_dac: bool,
     seen_fft: bool,
 ) -> usize {
-    if current == end {
+    if current == target {
         return usize::from(seen_dac && seen_fft);
     }
     let cache_key = (current, seen_dac, seen_fft);
@@ -65,11 +46,11 @@ fn count_paths_with_dac_fft(
         .unwrap()
         .iter()
         .map(|&neighbour| {
-            count_paths_with_dac_fft(
+            count_paths(
                 graph,
                 cache,
                 neighbour,
-                end,
+                target,
                 seen_dac || current == DAC,
                 seen_fft || current == FFT,
             )
@@ -80,11 +61,19 @@ fn count_paths_with_dac_fft(
 }
 
 #[tracing::instrument(skip_all, ret)]
+pub fn solve_part1(input: &str) -> usize {
+    // Answer = 607
+    let graph = parse_graph(input);
+    let mut cache: HashMap<(Node, bool, bool), usize> = HashMap::new();
+    count_paths(&graph, &mut cache, YOU, OUT, true, true)
+}
+
+#[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 506264456238938
     let graph = parse_graph(input);
     let mut cache: HashMap<(Node, bool, bool), usize> = HashMap::new();
-    count_paths_with_dac_fft(&graph, &mut cache, SVR, OUT, false, false)
+    count_paths(&graph, &mut cache, SVR, OUT, false, false)
     // TODO: can split problem into 3 times part1, but then there are paths that can "go past" your target node
     // FIXME: validate assumption that FFT -> DAC and not other way around
     // let p1 = count_paths(&graph, SVR, FFT);
