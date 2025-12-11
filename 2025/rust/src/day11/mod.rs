@@ -10,18 +10,21 @@ const FFT: [u8; 3] = *b"fft";
 type Node = [u8; 3];
 
 fn parse_node(node: &str) -> Node {
-    node.as_bytes().try_into().unwrap()
+    let b = node.as_bytes();
+    assert!(b.len() == 3, "node id must be 3 byte length");
+    [b[0], b[1], b[2]]
 }
 
 fn parse_graph(input: &str) -> HashMap<Node, Vec<Node>> {
     input
         .lines()
-        .map(|line| {
-            let (source, destinations) = line.split_once(": ").unwrap();
-            (
-                parse_node(source),
-                destinations.split_whitespace().map(parse_node).collect(),
-            )
+        .filter_map(|line| {
+            line.split_once(": ").map(|(source, destinations)| {
+                (
+                    parse_node(source),
+                    destinations.split_whitespace().map(parse_node).collect(),
+                )
+            })
         })
         .collect()
 }
@@ -41,9 +44,10 @@ fn count_paths(
     if let Some(&cached_total) = cache.get(&cache_key) {
         return cached_total;
     }
-    let total = graph
-        .get(&current)
-        .unwrap()
+    let Some(neighbours) = graph.get(&current) else {
+        return 0;
+    };
+    let total = neighbours
         .iter()
         .map(|&neighbour| {
             count_paths(
@@ -74,11 +78,14 @@ pub fn solve_part2(input: &str) -> usize {
     let graph = parse_graph(input);
     let mut cache: HashMap<(Node, bool, bool), usize> = HashMap::new();
     count_paths(&graph, &mut cache, SVR, OUT, false, false)
-    // TODO: can split problem into 3 times part1, but then there are paths that can "go past" your target node
-    // FIXME: validate assumption that FFT -> DAC and not other way around
-    // let p1 = count_paths(&graph, SVR, FFT);
-    // let p2 = count_paths(&graph, FFT, DAC);
-    // let p3 = count_paths(&graph, DAC, OUT);
+
+    // This works, but is not faster
+
+    // let p1 = count_paths(&graph, &mut cache, SVR, FFT, true, true);
+    // cache.clear();
+    // let p2 = count_paths(&graph, &mut cache, FFT, DAC, true, true);
+    // cache.clear();
+    // let p3 = count_paths(&graph, &mut cache, DAC, OUT, true, true);
     // p1 * p2 * p3
 }
 
