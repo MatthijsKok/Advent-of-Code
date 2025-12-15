@@ -7,18 +7,18 @@ pub fn solve_part1(input: &str) -> usize {
         .unwrap()
         .lines()
         .filter(|line| {
-            // TODO: `.is_some_and()` for beautiful
-            let (dims, presents) = line.split_once(": ").unwrap();
-            let available_spots = dims
-                .split_once('x')
-                .map(|(d1, d2)| (d1.parse::<u16>().unwrap() / 3) * (d2.parse::<u16>().unwrap() / 3))
-                .unwrap();
-            let presents_sum: u16 = presents
-                .split_ascii_whitespace()
-                .map(|p| p.parse::<u16>().unwrap())
-                .sum();
-
-            available_spots >= presents_sum
+            line.split_once(": ").is_some_and(|(dimensions, presents)| {
+                dimensions
+                    .split_once('x')
+                    .map(|(d1, d2)| {
+                        (d1.parse::<u16>().unwrap() / 3) * (d2.parse::<u16>().unwrap() / 3)
+                    })
+                    .unwrap()
+                    .ge(&presents
+                        .split_ascii_whitespace()
+                        .map(|p| p.parse::<u16>().unwrap())
+                        .sum())
+            })
         })
         .count()
 }
