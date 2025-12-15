@@ -33,13 +33,13 @@ fn solve(input: &str, battery_size: usize) -> usize {
         .sum()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 17330
     solve(input, 2)
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 171518260283767
     solve(input, 12)

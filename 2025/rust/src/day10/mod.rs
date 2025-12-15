@@ -2,8 +2,8 @@ use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::iter::Sum;
 
-use z3::ast::Int;
-use z3::{Optimize, SatResult};
+use rayon::prelude::*;
+use z3::{Optimize, SatResult, ast::Int};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 enum IndicatorState {
@@ -11,15 +11,15 @@ enum IndicatorState {
     On,
 }
 
-impl std::ops::Not for IndicatorState {
-    type Output = Self;
-    fn not(self) -> Self::Output {
-        match self {
-            Self::Off => Self::On,
-            Self::On => Self::Off,
-        }
-    }
-}
+// impl std::ops::Not for IndicatorState {
+//     type Output = Self;
+//     fn not(self) -> Self::Output {
+//         match self {
+//             Self::Off => Self::On,
+//             Self::On => Self::Off,
+//         }
+//     }
+// }
 
 impl TryFrom<char> for IndicatorState {
     type Error = char;
@@ -244,7 +244,7 @@ impl Debug for Machine {
     }
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 404
     // NOTES:
@@ -255,12 +255,12 @@ pub fn solve_part1(input: &str) -> usize {
     machines.iter().map(Machine::fewest_presses).sum()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 16474
     let machines = input.lines().map(Machine::parse).collect::<Vec<_>>();
     machines
-        .iter()
+        .par_iter()
         // .take(1)
         .map(Machine::fewest_presses_joltage)
         .sum()

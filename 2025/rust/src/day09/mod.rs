@@ -1,4 +1,4 @@
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 4725826296
     let points = input
@@ -20,7 +20,7 @@ pub fn solve_part1(input: &str) -> usize {
         .unwrap()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 1637556834
     let points = input

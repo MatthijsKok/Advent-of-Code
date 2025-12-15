@@ -64,7 +64,7 @@ fn count_paths(
     total
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 607
     let graph = parse_graph(input);
@@ -72,7 +72,7 @@ pub fn solve_part1(input: &str) -> usize {
     count_paths(&graph, &mut cache, YOU, OUT, true, true)
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 506264456238938
     let graph = parse_graph(input);

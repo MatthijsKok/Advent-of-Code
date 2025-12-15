@@ -13,7 +13,7 @@ fn merge_all_ranges(mut ranges: Vec<RangeInclusive<usize>>) -> Vec<RangeInclusiv
     })
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 739
     let mut ranges: Vec<RangeInclusive<usize>> = Vec::new();
@@ -39,7 +39,7 @@ pub fn solve_part1(input: &str) -> usize {
         .count()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 344486348901788
     let ranges = input

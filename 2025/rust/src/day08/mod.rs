@@ -101,13 +101,13 @@ fn solve(input: &str, num_connections: usize) -> usize {
     sizes.iter().rev().take(3).product()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 171503
     solve(input, 1000)
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 9069509600
     let points: Vec<Point> = input

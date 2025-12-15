@@ -17,7 +17,7 @@ impl TryFrom<char> for GridCell {
     }
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 1675
     let mut split_count: usize = 0;
@@ -59,7 +59,7 @@ pub fn solve_part1(input: &str) -> usize {
     split_count
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 187987920774390
     let manifold_grid = input

@@ -14,7 +14,7 @@ fn neighbours(i: usize, j: usize, upper_bound: usize) -> impl Iterator<Item = (u
     (start_i..=end_i).flat_map(move |ni| (start_j..=end_j).map(move |nj| (ni, nj)))
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 1474
     let dim_size = input.lines().next().unwrap().len();
@@ -42,7 +42,7 @@ pub fn solve_part1(input: &str) -> usize {
         .count()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 8910
     let mut count: usize = 0;

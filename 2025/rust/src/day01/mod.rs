@@ -42,7 +42,7 @@ impl DialerOne {
     }
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> u16 {
     // Answer = 1036
     let mut dialer = DialerOne::new();
@@ -78,7 +78,7 @@ impl DialerTwo {
     }
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> u16 {
     // Answer = 6228
     let mut dialer = DialerTwo::new();

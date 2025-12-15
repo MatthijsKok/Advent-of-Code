@@ -1,6 +1,6 @@
 use std::array;
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 5977759036837
     let input_width = input
@@ -34,7 +34,7 @@ pub fn solve_part1(input: &str) -> usize {
         .sum()
 }
 
-#[tracing::instrument(skip_all, ret)]
+#[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 9630000828442
     let input_width = input.lines().next().unwrap().len();
