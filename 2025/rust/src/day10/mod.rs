@@ -1,7 +1,9 @@
 use std::collections::VecDeque;
 use std::fmt::Debug;
+use std::iter::Sum;
 
-use rayon::prelude::*;
+use z3::ast::Int;
+use z3::{Optimize, SatResult};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 enum IndicatorState {
@@ -35,7 +37,7 @@ struct Machine {
     indicator_size: usize,
     indicator_target_state: usize,
     button_sets: Vec<Vec<u8>>,
-    joltages: Vec<usize>,
+    joltage_target_state: Vec<u16>,
 }
 
 impl Machine {
@@ -49,16 +51,16 @@ impl Machine {
             .chars()
             .map(|c| c.try_into().unwrap())
             .collect::<Vec<IndicatorState>>();
-        let joltages = chunks
+        let joltage_target_state = chunks
             .next_back()
             .unwrap()
             .trim_start_matches('{')
             .trim_end_matches('}')
             .split(',')
-            .map(|s| s.parse::<usize>().unwrap())
+            .map(|s| s.parse::<u16>().unwrap())
             .collect::<Vec<_>>();
 
-        let mut button_sets: Vec<Vec<u8>> = chunks
+        let button_sets: Vec<Vec<u8>> = chunks
             .map(|chunk| {
                 chunk
                     .chars()
@@ -66,8 +68,8 @@ impl Machine {
                     .collect()
             })
             .collect();
-        button_sets.sort_by_key(Vec::len);
-        button_sets.reverse();
+        // button_sets.sort_by_key(Vec::len);
+        // button_sets.reverse();
 
         let indicator_size = indicators.len();
         let indicator_target_state = indicators.iter().enumerate().fold(0usize, |acc, (i, s)| {
@@ -82,7 +84,7 @@ impl Machine {
             indicator_size,
             indicator_target_state,
             button_sets,
-            joltages,
+            joltage_target_state,
         }
     }
 
@@ -123,78 +125,102 @@ impl Machine {
         unreachable!("target indicator state unreachable");
     }
 
-    #[tracing::instrument(skip_all)]
+    // #[tracing::instrument(skip_all)]
     fn fewest_presses_joltage(&self) -> usize {
-        let targets = &self.joltages;
-        let counters = targets.len();
+        // https://docs.rs/z3/latest/z3/
 
-        let buttons = &self.button_sets;
+        // [##...##] (0,3,4,6) (1,2,4,5,6) (0,1,2,5,6) (0,1,3,5) (0,2,3,4,6) {29,26,26,12,9,26,26}
+        let indicator_affectors: Vec<Vec<bool>> = (0..u8::try_from(self.indicator_size).unwrap())
+            .map(|idx| self.button_sets.iter().map(|b| b.contains(&idx)).collect())
+            .collect();
+        // println!("{indicator_affectors:?}");
+        // [[true,  false, true,  true,  true],  AKA "indicator 0 is in buttons 0,2,3,4"
+        //  [false, true,  true,  true,  false],
+        //  [false, true,  true,  false, true],
+        //  [true,  false, false, true,  true],
+        //  [true,  true,  false, false, true],
+        //  [false, true,  true,  true,  false],
+        //  [true,  true,  true,  false, true]]
 
-        let mut rem = targets.clone();
+        // The system of linear equations we need to solve is:
+        // b0 +      b2 + b3 + b4 = 29
+        //      b1 + b2 + b3      = 26
+        //      b1 + b2 +      b4 = 26
+        // b0 +           b3 + b4 = 12
+        // b0 + b1 +           b4 = 9
+        //      b1 + b2 + b3      = 26
+        // b0 + b1 + b2 +      b4 = 26
+        // And then the answer is "for which solution is smallest: b0+b1+b2+b3+b4 ?"
 
-        let mut best = usize::MAX;
+        let optimizer = Optimize::new();
 
-        let mut rem_g = rem.clone();
-        let mut count = 0usize;
-        for b in buttons {
-            let max_times = b.iter().map(|&i| rem_g[i as usize]).min().unwrap_or(0);
-            if max_times > 0 {
-                for &i in b {
-                    rem_g[i as usize] = rem_g[i as usize].saturating_sub(max_times);
-                }
-                count += max_times;
-            }
-        }
-        if rem_g.iter().all(|&x| x == 0) {
-            best = count;
-        }
+        // b0, b1, b2, ... etc. "variables" in our linear equation set
+        let linear_variables = (0..self.button_sets.len())
+            .map(|i| Int::fresh_const(format!("b{i}").as_str()))
+            .collect::<Vec<_>>();
 
-        if best == usize::MAX {
-            let mut rem2 = rem.clone();
-            let mut count2 = 0usize;
-            let mut counter_buttons: Vec<Vec<usize>> = vec![vec![]; counters];
-            for (j, b) in buttons.iter().enumerate() {
-                for &i in b {
-                    counter_buttons[i as usize].push(j);
-                }
-            }
-            let mut safe = true;
-            while rem2.iter().any(|&x| x > 0) {
-                let (imax, &maxr) = rem2.iter().enumerate().max_by_key(|&(_, &v)| v).unwrap();
-                if maxr == 0 {
-                    break;
-                }
-                if let Some(&bj) = counter_buttons[imax].first() {
-                    let times = buttons[bj]
-                        .iter()
-                        .map(|&i| rem2[i as usize])
-                        .min()
-                        .unwrap_or(0);
-                    if times == 0 {
-                        safe = false;
-                        break;
-                    }
-                    for &i in &buttons[bj] {
-                        rem2[i as usize] = rem2[i as usize].saturating_sub(times);
-                    }
-                    count2 += times;
-                } else {
-                    safe = false;
-                    break;
-                }
-            }
-            if safe && rem2.iter().all(|&x| x == 0) {
-                best = count2;
-            }
+        for lin_var in &linear_variables {
+            optimizer.assert(&lin_var.ge(0));
         }
 
-        if best == usize::MAX {
-            best = rem.iter().sum();
+        for (indicator_index, affectors) in indicator_affectors.iter().enumerate() {
+            let eq_left = Int::sum(
+                affectors
+                    .iter()
+                    .enumerate()
+                    .filter(|&(_, &affector)| affector)
+                    .map(|(i, _)| &linear_variables[i]),
+            );
+            optimizer.assert(&eq_left.eq(self.joltage_target_state[indicator_index]));
         }
 
-        dfs(buttons, &mut rem, 0, 0, &mut best);
+        // minimize(b0 + b1 + b2 + b3 + b4)
+        let goal = linear_variables.iter().sum::<Int>();
+        optimizer.minimize(&goal);
 
-        best
+        // RUN the motherfucker
+        match optimizer.check(&[]) {
+            SatResult::Sat => {}
+            _ => panic!(),
+        }
+        // dbg!(&optimizer);
+        // dbg!(&optimizer.get_model());
+        // dbg!(&optimizer.get_objectives());
+        // dbg!(&optimizer.get_statistics());
+
+        let optimizer_model = optimizer.get_model().unwrap();
+        // dbg!(&optimizer_model);
+        // b0!0 -> 0
+        // b1!1 -> 3
+        // b2!2 -> 17
+        // b3!3 -> 6
+        // b4!4 -> 6
+
+        // dbg!(optimizer_model.eval(&goal, true).unwrap());
+        // 32
+
+        // AKA
+        // (0,3,4,6)    0 times
+        // (1,2,4,5,6)  3 times
+        // (0,1,2,5,6)  17 times
+        // (0,1,3,5)    6 times
+        // (0,2,3,4,6)  6 times
+
+        // Which would result in indicator values:
+        // 0: 0 + 17 + 6 + 6 = 29
+        // 1: 3 + 17 + 6 = 26
+        // ... etc
+
+        // which matches the joltage values
+        // {29,26,26,12,9,26,26}
+
+        optimizer_model
+            .eval(&goal, true)
+            .unwrap()
+            .as_u64()
+            .unwrap()
+            .try_into()
+            .unwrap()
     }
 }
 
@@ -210,62 +236,11 @@ impl Debug for Machine {
                 &format_args!("{:?}", &self.indicator_target_state),
             )
             .field("button_sets", &format_args!("{:?}", &self.button_sets))
-            .field("joltages", &format_args!("{:?}", &self.joltages))
+            .field(
+                "joltage_target_state",
+                &format_args!("{:?}", &self.joltage_target_state),
+            )
             .finish()
-    }
-}
-
-fn compute_lb(buttons: &[Vec<u8>], rem_vec: &[usize], start_btn: usize) -> usize {
-    let max_rem = *rem_vec.iter().max().unwrap_or(&0usize);
-    let sum_rem: usize = rem_vec.iter().sum();
-    let mut max_set_size = 1usize;
-    for b in buttons.iter().skip(start_btn) {
-        max_set_size = max_set_size.max(b.len());
-    }
-    sum_rem.div_ceil(max_set_size).max(max_rem)
-}
-
-fn dfs(buttons: &Vec<Vec<u8>>, rem: &mut Vec<usize>, idx: usize, current: usize, best: &mut usize) {
-    if current >= *best {
-        return;
-    }
-    if rem.iter().all(|&x| x == 0) {
-        *best = current;
-        return;
-    }
-    if idx >= buttons.len() {
-        return;
-    }
-
-    let lb = compute_lb(buttons, rem, idx);
-    if current + lb >= *best {
-        return;
-    }
-
-    let max_times = buttons[idx]
-        .iter()
-        .map(|&i| rem[i as usize])
-        .min()
-        .unwrap_or(0);
-
-    for times in (0..=max_times).rev() {
-        if current + times >= *best {
-            continue;
-        }
-        if times > 0 {
-            for &i in &buttons[idx] {
-                rem[i as usize] -= times;
-            }
-        }
-        let new_lb = compute_lb(buttons, rem, idx + 1);
-        if current + times + new_lb < *best {
-            dfs(buttons, rem, idx + 1, current + times, best);
-        }
-        if times > 0 {
-            for &i in &buttons[idx] {
-                rem[i as usize] += times;
-            }
-        }
     }
 }
 
@@ -273,7 +248,7 @@ fn dfs(buttons: &Vec<Vec<u8>>, rem: &mut Vec<usize>, idx: usize, current: usize,
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 404
     // NOTES:
-    // There can be at most 9 indicators
+    // There can be at most 10 indicators
     // -> indicator index is a single digit number
     let machines = input.lines().map(Machine::parse).collect::<Vec<_>>();
     // dbg!(&machines[0..2]);
@@ -282,9 +257,11 @@ pub fn solve_part1(input: &str) -> usize {
 
 #[tracing::instrument(skip_all, ret)]
 pub fn solve_part2(input: &str) -> usize {
+    // Answer = 16474
     let machines = input.lines().map(Machine::parse).collect::<Vec<_>>();
     machines
-        .par_iter()
+        .iter()
+        // .take(1)
         .map(Machine::fewest_presses_joltage)
         .sum()
 }
