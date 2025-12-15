@@ -6,19 +6,22 @@ pub fn solve_part1(input: &str) -> usize {
         .next()
         .unwrap()
         .lines()
-        .filter(|line| {
-            line.split_once(": ").is_some_and(|(dimensions, presents)| {
+        .map(|line| line.split_once(": ").unwrap())
+        .map(|(dimensions, presents)| {
+            (
                 dimensions
                     .split_once('x')
-                    .map(|(d1, d2)| {
-                        (d1.parse::<u16>().unwrap() / 3) * (d2.parse::<u16>().unwrap() / 3)
-                    })
-                    .unwrap()
-                    .ge(&presents
-                        .split_ascii_whitespace()
-                        .map(|p| p.parse::<u16>().unwrap())
-                        .sum())
-            })
+                    .map(|(d1, d2)| (d1.parse::<u16>().unwrap(), d2.parse::<u16>().unwrap()))
+                    .map(|(d1, d2)| (d1 / 3) * (d2 / 3))
+                    .unwrap(),
+                presents
+                    .split_ascii_whitespace()
+                    .map(|p| p.parse::<u16>().unwrap())
+                    .sum::<u16>(),
+            )
+        })
+        .filter(|(region_area_clipped, presents_total_sum)| {
+            region_area_clipped >= presents_total_sum
         })
         .count()
 }
