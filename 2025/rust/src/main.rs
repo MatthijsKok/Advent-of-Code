@@ -76,5 +76,5 @@ fn main() {
     assert_eq!(day12::solve_part1(input), 536);
     assert_eq!(day12::solve_part2(input), 0);
 
-    info!("See you tomorrow!");
+    info!("See you next year!");
 }
