@@ -1,4 +1,8 @@
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::fallible_impl_from)]
 use std::cmp::Ordering;
+
+use rayon::prelude::*;
 
 #[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 struct Point {
@@ -18,41 +22,40 @@ impl Point {
     }
 }
 
-impl TryFrom<&str> for Point {
-    type Error = ();
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let mut parts = s.split(',');
-        Ok(Self {
-            x: parts.next().ok_or(())?.parse().map_err(|_| ())?,
-            y: parts.next().ok_or(())?.parse().map_err(|_| ())?,
-            z: parts.next().ok_or(())?.parse().map_err(|_| ())?,
-        })
+impl From<&str> for Point {
+    fn from(value: &str) -> Self {
+        let mut parts = value.split(',').map(|s| s.parse::<u32>().unwrap());
+        Self {
+            x: parts.next().unwrap(),
+            y: parts.next().unwrap(),
+            z: parts.next().unwrap(),
+        }
     }
 }
 
 struct UnionFind {
-    parent: Vec<usize>,
-    rank: Vec<usize>,
-    size: Vec<usize>,
+    parent: Vec<u16>,
+    rank: Vec<u16>,
+    size: Vec<u16>,
 }
 
 impl UnionFind {
-    fn new(n: usize) -> Self {
+    fn new(n: u16) -> Self {
         Self {
             parent: (0..n).collect(),
-            rank: vec![0; n],
-            size: vec![1; n],
+            rank: vec![0; n as usize],
+            size: vec![1; n as usize],
         }
     }
 
-    fn find(&mut self, x: usize) -> usize {
-        if self.parent[x] != x {
-            self.parent[x] = self.find(self.parent[x]);
+    fn find(&mut self, x: u16) -> u16 {
+        if self.parent[x as usize] != x {
+            self.parent[x as usize] = self.find(self.parent[x as usize]);
         }
-        self.parent[x]
+        self.parent[x as usize]
     }
 
-    fn union(&mut self, x: usize, y: usize) -> Option<usize> {
+    fn union(&mut self, x: u16, y: u16) -> Option<u16> {
         let root_x = self.find(x);
         let root_y = self.find(y);
 
@@ -60,33 +63,30 @@ impl UnionFind {
             return None;
         }
 
-        let (child, parent) = match self.rank[root_x].cmp(&self.rank[root_y]) {
+        let (child, parent) = match self.rank[root_x as usize].cmp(&self.rank[root_y as usize]) {
             Ordering::Less => (root_x, root_y),
             Ordering::Greater => (root_y, root_x),
             Ordering::Equal => {
-                self.rank[root_x] += 1;
+                self.rank[root_x as usize] += 1;
                 (root_y, root_x)
             }
         };
-        self.parent[child] = parent;
-        self.size[parent] += self.size[child];
-        Some(self.size[parent])
+        self.parent[child as usize] = parent;
+        self.size[parent as usize] += self.size[child as usize];
+        Some(self.size[parent as usize])
     }
 }
 
 /// separate for the test
 fn solve(input: &str, num_connections: usize) -> usize {
-    let points: Vec<Point> = input
-        .lines()
-        .map(|line| Point::try_from(line).unwrap())
-        .collect();
-    let n = points.len();
+    let points: Vec<Point> = input.lines().map(Point::from).collect();
+    let n = points.len() as u16;
 
     let mut edges = (0..n)
         .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
-        .map(|(i, j)| (points[i].dist_squared(&points[j]), i, j))
+        .map(|(i, j)| (points[i as usize].dist_squared(&points[j as usize]), i, j))
         .collect::<Vec<_>>();
-    edges.sort_unstable(); // unstable = faaast
+    edges.par_sort_unstable(); // unstable = faaast
 
     let mut uf = UnionFind::new(n);
     for &(_, i, j) in edges.iter().take(num_connections) {
@@ -94,9 +94,9 @@ fn solve(input: &str, num_connections: usize) -> usize {
     }
 
     let mut sizes = (0..n)
-        .filter_map(|i| (uf.find(i) == i).then_some(uf.size[i]))
+        .filter_map(|i| (uf.find(i) == i).then_some(uf.size[i as usize] as usize))
         .collect::<Vec<_>>();
-    sizes.sort_unstable();
+    sizes.par_sort_unstable();
 
     sizes.iter().rev().take(3).product()
 }
@@ -110,16 +110,13 @@ pub fn solve_part1(input: &str) -> usize {
 #[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 9069509600
-    let points: Vec<Point> = input
-        .lines()
-        .map(|line| Point::try_from(line).unwrap())
-        .collect();
-    let n = points.len();
+    let points: Vec<Point> = input.lines().map(Point::from).collect();
+    let n = points.len() as u16;
     let mut edges = (0..n)
         .flat_map(|i| (i + 1..n).map(move |j| (i, j)))
-        .map(|(i, j)| (points[i].dist_squared(&points[j]), i, j))
+        .map(|(i, j)| (points[i as usize].dist_squared(&points[j as usize]), i, j))
         .collect::<Vec<_>>();
-    edges.sort_unstable(); // unstable = faaast
+    edges.par_sort_unstable(); // unstable = faaast
 
     let mut uf = UnionFind::new(n);
     let (i, j) = edges
@@ -128,7 +125,7 @@ pub fn solve_part2(input: &str) -> usize {
         .find(|&(size, _, _)| size == n)
         .map(|(_, i, j)| (i, j))
         .unwrap();
-    points[i].x as usize * points[j].x as usize
+    points[i as usize].x as usize * points[j as usize].x as usize
 }
 
 #[cfg(test)]
