@@ -1,3 +1,4 @@
+#![allow(clippy::cast_possible_truncation)]
 use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::iter::Sum;
@@ -10,16 +11,6 @@ enum IndicatorState {
     Off,
     On,
 }
-
-// impl std::ops::Not for IndicatorState {
-//     type Output = Self;
-//     fn not(self) -> Self::Output {
-//         match self {
-//             Self::Off => Self::On,
-//             Self::On => Self::Off,
-//         }
-//     }
-// }
 
 impl TryFrom<char> for IndicatorState {
     type Error = char;
@@ -124,59 +115,77 @@ impl Machine {
 
         unreachable!("target indicator state unreachable");
     }
+}
 
-    // #[tracing::instrument(skip_all)]
-    fn fewest_presses_joltage(self) -> usize {
-        let indicator_affectors: Vec<Vec<bool>> = (0..u8::try_from(self.indicator_size).unwrap())
-            .map(|idx| self.button_sets.iter().map(|b| b.contains(&idx)).collect())
-            .collect();
+// fn get_presses(line: &str) -> u8 {
+//     0
+// }
 
-        let optimizer = Optimize::new();
+fn get_joltage_presses(line: &str) -> u16 {
+    let mut chunks = line.split_ascii_whitespace();
+    let indicator_chunk = chunks.next().unwrap();
+    let indicator_size = indicator_chunk.len() as u8 - 2;
 
-        // b0, b1, b2, ... etc. "variables" in our linear equation set
-        let linear_variables = (0..self.button_sets.len())
-            .map(|i| Int::fresh_const(format!("b{i}").as_str()))
-            .collect::<Vec<_>>();
+    let joltage_chunk = chunks.next_back().unwrap();
+    let joltage_target_state = joltage_chunk[1..joltage_chunk.len() - 1]
+        .split(',')
+        .map(|n| n.parse::<u16>().unwrap())
+        .collect::<Vec<_>>();
 
-        for (indicator_index, affectors) in indicator_affectors.iter().enumerate() {
-            let eq_left = Int::sum(
-                affectors
-                    .iter()
-                    .enumerate()
-                    .filter(|&(_, &affector)| affector)
-                    .map(|(i, _)| &linear_variables[i]),
-            );
-            optimizer.assert(&eq_left.eq(self.joltage_target_state[indicator_index]));
-        }
+    let button_sets: Vec<Vec<u8>> = chunks
+        .map(|chunk| {
+            let bs = chunk.as_bytes();
+            bs[1..bs.len() - 1].chunks(2).map(|b| b[0] - b'0').collect()
+        })
+        .collect();
+    let indicator_affectors: Vec<Vec<bool>> = (0..indicator_size)
+        .map(|idx| button_sets.iter().map(|b| b.contains(&idx)).collect())
+        .collect();
 
-        // b_n >= 0
-        for lv in &linear_variables {
-            optimizer.assert(&lv.ge(0));
-        }
-        // minimize(b0 + b1 + b2 + b3 + b4)
-        let goal = linear_variables.iter().sum::<Int>();
-        optimizer.minimize(&goal);
+    let optimizer = Optimize::new();
 
-        // RUN the motherfucker
-        match optimizer.check(&[]) {
-            SatResult::Sat => {}
-            _ => panic!(),
-        }
-        optimizer
-            .get_model()
-            .unwrap()
-            .eval(&goal, true)
-            .unwrap()
-            .as_u64()
-            .unwrap()
-            .try_into()
-            .unwrap()
+    // b0, b1, b2, ... etc. "variables" in our linear equation set
+    let linear_variables = (0..button_sets.len())
+        .map(|i| Int::fresh_const(format!("b{i}").as_str()))
+        .collect::<Vec<_>>();
+
+    for (indicator_index, affectors) in indicator_affectors.iter().enumerate() {
+        let eq_left = Int::sum(
+            affectors
+                .iter()
+                .enumerate()
+                .filter(|&(_, &affector)| affector)
+                .map(|(i, _)| &linear_variables[i]),
+        );
+        optimizer.assert(&eq_left.eq(joltage_target_state[indicator_index]));
     }
+
+    // b_n >= 0
+    for lv in &linear_variables {
+        optimizer.assert(&lv.ge(0));
+    }
+    // minimize(b0 + b1 + b2 + b3 + b4)
+    let goal = linear_variables.iter().sum::<Int>();
+    optimizer.minimize(&goal);
+
+    // RUN the motherfucker
+    match optimizer.check(&[]) {
+        SatResult::Sat => {}
+        _ => panic!(),
+    }
+    optimizer
+        .get_model()
+        .unwrap()
+        .eval(&goal, true)
+        .unwrap()
+        .as_u64()
+        .unwrap() as u16
 }
 
 #[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 404
+    // input.lines()
     input
         .lines()
         .map(Machine::parse)
@@ -187,12 +196,7 @@ pub fn solve_part1(input: &str) -> usize {
 #[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 16474
-    input
-        .par_lines()
-        .map(Machine::parse)
-        // .take(1)
-        .map(Machine::fewest_presses_joltage)
-        .sum()
+    input.par_lines().map(get_joltage_presses).sum::<u16>() as usize
 }
 
 #[cfg(test)]
