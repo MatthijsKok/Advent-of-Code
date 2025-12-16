@@ -88,7 +88,7 @@ impl Machine {
         }
     }
 
-    fn fewest_presses(&self) -> usize {
+    fn fewest_presses(self) -> usize {
         let mut button_masks: Vec<usize> = Vec::with_capacity(self.button_sets.len());
         for button in &self.button_sets {
             let mut mask = 0usize;
@@ -126,31 +126,10 @@ impl Machine {
     }
 
     // #[tracing::instrument(skip_all)]
-    fn fewest_presses_joltage(&self) -> usize {
-        // https://docs.rs/z3/latest/z3/
-
-        // [##...##] (0,3,4,6) (1,2,4,5,6) (0,1,2,5,6) (0,1,3,5) (0,2,3,4,6) {29,26,26,12,9,26,26}
+    fn fewest_presses_joltage(self) -> usize {
         let indicator_affectors: Vec<Vec<bool>> = (0..u8::try_from(self.indicator_size).unwrap())
             .map(|idx| self.button_sets.iter().map(|b| b.contains(&idx)).collect())
             .collect();
-        // println!("{indicator_affectors:?}");
-        // [[true,  false, true,  true,  true],  AKA "indicator 0 is in buttons 0,2,3,4"
-        //  [false, true,  true,  true,  false],
-        //  [false, true,  true,  false, true],
-        //  [true,  false, false, true,  true],
-        //  [true,  true,  false, false, true],
-        //  [false, true,  true,  true,  false],
-        //  [true,  true,  true,  false, true]]
-
-        // The system of linear equations we need to solve is:
-        // b0 +      b2 + b3 + b4 = 29
-        //      b1 + b2 + b3      = 26
-        //      b1 + b2 +      b4 = 26
-        // b0 +           b3 + b4 = 12
-        // b0 + b1 +           b4 = 9
-        //      b1 + b2 + b3      = 26
-        // b0 + b1 + b2 +      b4 = 26
-        // And then the answer is "for which solution is smallest: b0+b1+b2+b3+b4 ?"
 
         let optimizer = Optimize::new();
 
@@ -158,10 +137,6 @@ impl Machine {
         let linear_variables = (0..self.button_sets.len())
             .map(|i| Int::fresh_const(format!("b{i}").as_str()))
             .collect::<Vec<_>>();
-
-        for lin_var in &linear_variables {
-            optimizer.assert(&lin_var.ge(0));
-        }
 
         for (indicator_index, affectors) in indicator_affectors.iter().enumerate() {
             let eq_left = Int::sum(
@@ -174,6 +149,10 @@ impl Machine {
             optimizer.assert(&eq_left.eq(self.joltage_target_state[indicator_index]));
         }
 
+        // b_n >= 0
+        for lv in &linear_variables {
+            optimizer.assert(&lv.ge(0));
+        }
         // minimize(b0 + b1 + b2 + b3 + b4)
         let goal = linear_variables.iter().sum::<Int>();
         optimizer.minimize(&goal);
@@ -183,38 +162,9 @@ impl Machine {
             SatResult::Sat => {}
             _ => panic!(),
         }
-        // dbg!(&optimizer);
-        // dbg!(&optimizer.get_model());
-        // dbg!(&optimizer.get_objectives());
-        // dbg!(&optimizer.get_statistics());
-
-        let optimizer_model = optimizer.get_model().unwrap();
-        // dbg!(&optimizer_model);
-        // b0!0 -> 0
-        // b1!1 -> 3
-        // b2!2 -> 17
-        // b3!3 -> 6
-        // b4!4 -> 6
-
-        // dbg!(optimizer_model.eval(&goal, true).unwrap());
-        // 32
-
-        // AKA
-        // (0,3,4,6)    0 times
-        // (1,2,4,5,6)  3 times
-        // (0,1,2,5,6)  17 times
-        // (0,1,3,5)    6 times
-        // (0,2,3,4,6)  6 times
-
-        // Which would result in indicator values:
-        // 0: 0 + 17 + 6 + 6 = 29
-        // 1: 3 + 17 + 6 = 26
-        // ... etc
-
-        // which matches the joltage values
-        // {29,26,26,12,9,26,26}
-
-        optimizer_model
+        optimizer
+            .get_model()
+            .unwrap()
             .eval(&goal, true)
             .unwrap()
             .as_u64()
@@ -224,43 +174,22 @@ impl Machine {
     }
 }
 
-impl Debug for Machine {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Machine")
-            .field(
-                "indicator_size",
-                &format_args!("{:?}", &self.indicator_size),
-            )
-            .field(
-                "indicator_target_state",
-                &format_args!("{:?}", &self.indicator_target_state),
-            )
-            .field("button_sets", &format_args!("{:?}", &self.button_sets))
-            .field(
-                "joltage_target_state",
-                &format_args!("{:?}", &self.joltage_target_state),
-            )
-            .finish()
-    }
-}
-
 #[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 404
-    // NOTES:
-    // There can be at most 10 indicators
-    // -> indicator index is a single digit number
-    let machines = input.lines().map(Machine::parse).collect::<Vec<_>>();
-    // dbg!(&machines[0..2]);
-    machines.iter().map(Machine::fewest_presses).sum()
+    input
+        .lines()
+        .map(Machine::parse)
+        .map(Machine::fewest_presses)
+        .sum()
 }
 
 #[tracing::instrument(skip_all)]
 pub fn solve_part2(input: &str) -> usize {
     // Answer = 16474
-    let machines = input.lines().map(Machine::parse).collect::<Vec<_>>();
-    machines
-        .par_iter()
+    input
+        .par_lines()
+        .map(Machine::parse)
         // .take(1)
         .map(Machine::fewest_presses_joltage)
         .sum()
