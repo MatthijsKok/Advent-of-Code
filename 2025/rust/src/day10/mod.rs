@@ -1,125 +1,56 @@
 #![allow(clippy::cast_possible_truncation)]
 use std::collections::VecDeque;
-use std::fmt::Debug;
 use std::iter::Sum;
 
 use rayon::prelude::*;
 use z3::{Optimize, SatResult, ast::Int};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-enum IndicatorState {
-    Off,
-    On,
-}
+fn get_presses(line: &str) -> u16 {
+    let mut chunks = line.split_ascii_whitespace();
 
-impl TryFrom<char> for IndicatorState {
-    type Error = char;
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            '#' => Ok(Self::On),
-            '.' => Ok(Self::Off),
-            _ => Err(value),
+    let indicator_chunk = chunks.next().unwrap().as_bytes();
+    chunks.next_back(); // skip joltages
+    let indicator_size = indicator_chunk.len() as u8 - 2;
+    let indicator_target_state: u16 = indicator_chunk[1..indicator_chunk.len() - 1]
+        .iter()
+        .enumerate()
+        .filter(|&(_, s)| *s == b'#')
+        .fold(0, |acc, (i, _)| acc | (1 << i));
+
+    let button_masks = chunks
+        .map(|chunk| {
+            let bytes = chunk.as_bytes();
+            bytes[1..bytes.len() - 1]
+                .chunks(2)
+                .map(|b| b[0] - b'0')
+                .filter(|i| *i < indicator_size)
+                .fold(0, |acc, i| acc | 1 << i)
+        })
+        .collect::<Vec<_>>();
+
+    let max_states = 1 << indicator_size;
+    let mut dist = vec![u16::MAX; max_states];
+    dist[0] = 0;
+
+    let mut q: VecDeque<u16> = VecDeque::with_capacity(64);
+    q.push_back(0);
+
+    while let Some(state) = q.pop_front() {
+        if state == indicator_target_state {
+            return dist[state as usize];
         }
-    }
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Default)]
-struct Machine {
-    indicator_size: usize,
-    indicator_target_state: usize,
-    button_sets: Vec<Vec<u8>>,
-    joltage_target_state: Vec<u16>,
-}
-
-impl Machine {
-    fn parse(line: &str) -> Self {
-        let mut chunks = line.split_ascii_whitespace();
-        let indicators = chunks
-            .next()
-            .unwrap()
-            .trim_start_matches('[')
-            .trim_end_matches(']')
-            .chars()
-            .map(|c| c.try_into().unwrap())
-            .collect::<Vec<IndicatorState>>();
-        let joltage_target_state = chunks
-            .next_back()
-            .unwrap()
-            .trim_start_matches('{')
-            .trim_end_matches('}')
-            .split(',')
-            .map(|s| s.parse::<u16>().unwrap())
-            .collect::<Vec<_>>();
-
-        let button_sets: Vec<Vec<u8>> = chunks
-            .map(|chunk| {
-                chunk
-                    .chars()
-                    .filter_map(|c| c.to_digit(10).and_then(|d| u8::try_from(d).ok()))
-                    .collect()
-            })
-            .collect();
-        // button_sets.sort_by_key(Vec::len);
-        // button_sets.reverse();
-
-        let indicator_size = indicators.len();
-        let indicator_target_state = indicators.iter().enumerate().fold(0usize, |acc, (i, s)| {
-            if *s == IndicatorState::On {
-                acc | (1usize << i)
-            } else {
-                acc
+        let d = dist[state as usize];
+        for &bm in &button_masks {
+            let ns = state ^ bm;
+            if dist[ns as usize] == u16::MAX {
+                dist[ns as usize] = d + 1;
+                q.push_back(ns);
             }
-        });
-
-        Self {
-            indicator_size,
-            indicator_target_state,
-            button_sets,
-            joltage_target_state,
         }
     }
 
-    fn fewest_presses(self) -> usize {
-        let mut button_masks: Vec<usize> = Vec::with_capacity(self.button_sets.len());
-        for button in &self.button_sets {
-            let mut mask = 0usize;
-            for &i in button {
-                if i as usize >= self.indicator_size {
-                    continue;
-                }
-                mask |= 1usize << i;
-            }
-            button_masks.push(mask);
-        }
-
-        let max_states = 1usize << self.indicator_size;
-        let mut dist = vec![usize::MAX; max_states];
-        let mut q = VecDeque::with_capacity(64);
-
-        dist[0] = 0;
-        q.push_back(0usize);
-
-        while let Some(state) = q.pop_front() {
-            if state == self.indicator_target_state {
-                return dist[state];
-            }
-            let d = dist[state];
-            for &bm in &button_masks {
-                let ns = state ^ bm;
-                if dist[ns] == usize::MAX {
-                    dist[ns] = d + 1;
-                    q.push_back(ns);
-                }
-            }
-        }
-
-        unreachable!("target indicator state unreachable");
-    }
+    unreachable!("target indicator state unreachable");
 }
-
-// fn get_presses(line: &str) -> u8 {
-//     0
-// }
 
 fn get_joltage_presses(line: &str) -> u16 {
     let mut chunks = line.split_ascii_whitespace();
@@ -185,12 +116,7 @@ fn get_joltage_presses(line: &str) -> u16 {
 #[tracing::instrument(skip_all)]
 pub fn solve_part1(input: &str) -> usize {
     // Answer = 404
-    // input.lines()
-    input
-        .lines()
-        .map(Machine::parse)
-        .map(Machine::fewest_presses)
-        .sum()
+    input.lines().map(get_presses).sum::<u16>() as usize
 }
 
 #[tracing::instrument(skip_all)]
